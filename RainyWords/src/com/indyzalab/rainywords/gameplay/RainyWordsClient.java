@@ -5,7 +5,11 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -13,12 +17,19 @@ import java.net.Socket;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 
 import org.json.simple.JSONArray;
@@ -45,6 +56,14 @@ public class RainyWordsClient {
     JTextArea messageArea = new JTextArea(8, 40);
     GamePanel gamePanel;
     Dimension size = new Dimension(Constants.GAMEUI_WIDTH,Constants.GAMEUI_HEIGHT);
+    
+    
+    private static JMenuBar menuBar;
+	private static JMenu menu;
+	private static JMenuItem menuItem;
+	private static JMenuItem menuItemLoad;
+	private static JMenuItem menuExit;
+    
     /**
      * Constructs the client by laying out the GUI and registering a
      * listener with the textfield so that pressing Return in the
@@ -96,6 +115,14 @@ public class RainyWordsClient {
 			public void onTimerComplete() {
 				// TODO Auto-generated method stub
 				gamePanel.stopPolling();
+				// Game end 
+				JSONObject jObj = CommandHelper
+            			.getCommandDataJSON(CommandConstants.GAME_END
+            					, null);
+        		out.println(jObj.toString());
+        		textField.setText("");
+        		
+				
 			}
 			
 			@Override
@@ -132,10 +159,49 @@ public class RainyWordsClient {
             
             }
         });
-        
+        createMenu();
         setCurrentTimeLabel(Constants.GAME_TIME/1000);
+//        showGameResult();
     }
 
+    
+    
+
+    /**
+     * Prompt for and return the address of the server.
+     */
+    private int showGameResult() {
+    	// Check if we win/lose
+    	String result = "YOU WIN!";
+    	if(currentPlayer == null) return 0;
+    	System.out.println("Result Other Player: "+otherPlayer.size());
+    	if(currentPlayer.points > otherPlayer.get(0).points){
+    		// more than WIN
+    		result = "YOU WIN!";
+    	}else if(currentPlayer.points < otherPlayer.get(0).points){
+    		// less than LOSE
+    		result = "YOU LOSE!";
+    	}else{
+    		// equal
+    		result = "DRAW!";
+    	}
+    	Object[] options = {"OK"};
+        int n = JOptionPane.showOptionDialog(frame,
+        		result,"Result",
+                       JOptionPane.PLAIN_MESSAGE,
+                       JOptionPane.QUESTION_MESSAGE,
+                       null,
+                       options,
+                       options[0]);
+        if (n == JOptionPane.OK_OPTION) {
+            System.out.println("OK!"); // do something
+            
+        }
+    	return n;
+    }
+    
+    
+    
     /**
      * Prompt for and return the address of the server.
      */
@@ -234,6 +300,23 @@ public class RainyWordsClient {
             	gamePanel.removeWords(removed_word);
             	
             	messageArea.append(jObj.get(CommandConstants.DATA) + "\n");
+            } else if (command.equals(CommandConstants.GAME_END_RESULT)){
+            	JSONArray playerJSONArray = (JSONArray)jObj.get(CommandConstants.DATA);
+        		for(Object pObj:playerJSONArray){
+        			JSONObject playerJsonObj = (JSONObject) pObj;
+        			Player player = new Player(playerJsonObj);
+            		System.out.println(player);
+            		if(player.uniqueID.equals(currentPlayer.uniqueID)){
+            			currentPlayer.points = player.points;
+            		}else if(!otherPlayer.isEmpty()){
+            			if(player.uniqueID.equals(otherPlayer.get(0).uniqueID))
+            				otherPlayer.get(0).points = player.points;
+            		}
+        		}
+        		
+        		// Show who win/lose
+        		showGameResult();
+        		
             } else{
             	messageArea.append(line + "\n");
             }
@@ -267,6 +350,82 @@ public class RainyWordsClient {
         return output;
      }
 
+    
+    private void createMenu(){
+		//Where the GUI is created:
+		
+		//Create a file chooser
+		final JFileChooser fc = new JFileChooser();
+		
+		//Create the menu bar.
+		menuBar = new JMenuBar();
+
+		//Build the first menu.
+		menu = new JMenu("File");
+		menu.setMnemonic(KeyEvent.VK_A);
+		menu.getAccessibleContext().setAccessibleDescription(
+		        "The only menu in this program that has menu items");
+		menuBar.add(menu);
+
+		//a group of JMenuItems
+		menuItem = new JMenuItem("New",
+		                         KeyEvent.VK_T);
+		menuItem.setAccelerator(KeyStroke.getKeyStroke(
+		        KeyEvent.VK_1, ActionEvent.ALT_MASK));
+		menuItem.getAccessibleContext().setAccessibleDescription(
+		        "This doesn't really do anything");
+		
+		menuItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				//Handle open button action.
+			    if (e.getSource() == menuItem) {
+			        //Open button
+			   }
+			}
+		});
+		menuItemLoad = new JMenuItem("Load Background",
+                KeyEvent.VK_T);
+		menuItemLoad.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				//Handle open button action.
+			    if (e.getSource() == menuItemLoad) {
+			    	// Reset button 
+			    	
+			    }
+			}
+		});
+		
+		menuExit = new JMenuItem("Exit");
+		menuExit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+			}
+		});
+//		jLabel.setIcon(icon);
+		menu.add(menuItem);
+		menu.add(menuItemLoad);
+		menu.addSeparator();
+		menu.add(menuExit);
+		
+		frame.setJMenuBar(menuBar);
+	}
+    
+    
+    public void sendResetRequest(){
+    	JSONObject jObj = CommandHelper
+    			.getCommandDataJSON(CommandConstants.RESET_REQUEST, null);
+		out.println(jObj.toString());
+		textField.setText("");
+    }
     
     /**
      * Runs the client as an application with a closeable frame.

@@ -101,14 +101,16 @@ public class GamePanel extends JPanel{
 	
 	public void checkWordsState(){
 		ArrayList<Word> removedWord = new ArrayList<Word>();
-		for(Word word:words){
+		for(int i=0;i<words.size();i++){
+			Word word = words.get(i);
         	if(word.getState() == Word.STATE_REMOVED){
         		removedWord.add(word);
         	}else{
         		moveWordDown(word);
         		Dimension d = new Dimension(Constants.GAMEUI_WIDTH, Constants.GAMEUI_HEIGHT);
         		if(word.pos_y > d.height){
-        			word.setAsRemovedState();
+//        			word.setAsRemovedState();
+        			removedWord.add(word);
         		}
         	}
         }
@@ -229,6 +231,7 @@ public class GamePanel extends JPanel{
 					// End timer
 					listener.onTimerComplete();
 					stopTimer();
+					System.out.println("StopTimer");
 				}
 			}
 		});

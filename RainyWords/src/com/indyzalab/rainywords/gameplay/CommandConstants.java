@@ -17,6 +17,10 @@ public class CommandConstants {
 	public static final String WORDS_DATA = "word_data_array";
 	public static final String ALL_READY = "all_ready";
 	public static final String PLAYER_LIST = "player_list";
+	public static final String GAME_END = "game_end";
+	public static final String GAME_END_RESULT = "game_end_result";
+	public static final String RESET_REQUEST = "reset_request";
+	public static final String FORCE_RESET = "force_reset";
 	
 	public static final String OTHER_PLAYER_ENTER = "OTHERPLAYERENTER";
 	public static final String QUIT = "QUIT";
