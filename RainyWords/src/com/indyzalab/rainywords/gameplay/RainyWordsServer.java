@@ -8,8 +8,8 @@ public class RainyWordsServer {
         System.out.println("Rainy Words Server is Running");
         try {
         	int i = 0;
+        	RWGame game = new RWGame();
             while(true){
-                RWGame game = new RWGame();
                 RWGame.Handler player1 = game.new Handler(listener.accept(), "Test"+i);
                 player1.start();
                 i++;

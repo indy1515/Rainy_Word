@@ -200,7 +200,16 @@ public class RainyWordsClient {
     	return n;
     }
     
-    
+    private int getReadyStatus(){
+    	Object[] options = {"OK"};
+    	return JOptionPane.showOptionDialog(frame,
+        		"Press OK when you are ready","Ready?",
+                       JOptionPane.PLAIN_MESSAGE,
+                       JOptionPane.QUESTION_MESSAGE,
+                       null,
+                       options,
+                       options[0]);
+    }
     
     /**
      * Prompt for and return the address of the server.
@@ -254,6 +263,10 @@ public class RainyWordsClient {
             	System.out.println("Current Player: "+currentPlayer);
                 textField.setEditable(true);
                 
+            } else if (command.equals(CommandConstants.CHECK_READY)){
+            	System.out.println("Check ready?");
+            	out.println(getReadyStatus());
+            	
             } else if(command.equals(CommandConstants.WORDS_DATA)){
             	JSONArray wordJsonArray = (JSONArray)jObj.get(CommandConstants.DATA);
             	for(Object object:wordJsonArray){
@@ -269,10 +282,20 @@ public class RainyWordsClient {
         			JSONObject playerJsonObj = (JSONObject) pObj;
         			Player player = new Player(playerJsonObj);
         			if(currentPlayer == null) break;
-        			if(player.uniqueID.equals(currentPlayer.uniqueID)) continue;
+        			if(player.uniqueID.equals(currentPlayer.uniqueID)) {
+        				// set data
+        				currentPlayer = player;
+        				continue;
+        			}
+        			for(Player op : otherPlayer){
+        				if(player.uniqueID.equals(op.uniqueID)){
+        					// set data
+        					op = player;
+        					continue;
+        				}
+        			}
         			otherPlayer.add(player);
         		}
-        		
         		// Assign name to opponent and the player
         		if(!otherPlayer.isEmpty()){
         			Player opponent = otherPlayer.get(0);
@@ -300,7 +323,11 @@ public class RainyWordsClient {
             	gamePanel.removeWords(removed_word);
             	
             	messageArea.append(jObj.get(CommandConstants.DATA) + "\n");
-            } else if (command.equals(CommandConstants.GAME_END_RESULT)){
+            }else if (command.equals(CommandConstants.SERVER_RESET_REQUEST)){
+            	sendConfirmReset();
+            }
+            
+            else if (command.equals(CommandConstants.GAME_END_RESULT)){
             	JSONArray playerJSONArray = (JSONArray)jObj.get(CommandConstants.DATA);
         		for(Object pObj:playerJSONArray){
         			JSONObject playerJsonObj = (JSONObject) pObj;
@@ -317,13 +344,21 @@ public class RainyWordsClient {
         		// Show who win/lose
         		showGameResult();
         		
-            } else{
+            } else if (command.equals(CommandConstants.FORCE_RESET)){
+            	// Force reset game
+            	System.out.println("Force Reset");
+            	resetGame();
+            }else{
             	messageArea.append(line + "\n");
             }
             refreshData();
         }
     }
 
+    public void resetGame(){
+    	gamePanel.stopPolling();
+    	gamePanel.stopTimer();
+    }
     
     public void refreshData(){
     	if(currentPlayer == null) return;
@@ -368,7 +403,7 @@ public class RainyWordsClient {
 		menuBar.add(menu);
 
 		//a group of JMenuItems
-		menuItem = new JMenuItem("New",
+		menuItem = new JMenuItem("Reset Game",
 		                         KeyEvent.VK_T);
 		menuItem.setAccelerator(KeyStroke.getKeyStroke(
 		        KeyEvent.VK_1, ActionEvent.ALT_MASK));
@@ -382,7 +417,8 @@ public class RainyWordsClient {
 				// TODO Auto-generated method stub
 				//Handle open button action.
 			    if (e.getSource() == menuItem) {
-			        //Open button
+			        //Reset button
+			    	sendResetRequest();
 			   }
 			}
 		});
@@ -427,6 +463,13 @@ public class RainyWordsClient {
 		textField.setText("");
     }
     
+    public void sendConfirmReset(){
+    	JSONObject jObj = CommandHelper
+    			.getCommandDataJSON(CommandConstants.CONFIRM_RESET, null);
+		out.println(jObj.toString());
+		textField.setText("");
+    	
+    }
     /**
      * Runs the client as an application with a closeable frame.
      */

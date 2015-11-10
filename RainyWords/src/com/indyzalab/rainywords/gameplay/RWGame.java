@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.swing.JOptionPane;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -50,9 +52,6 @@ public class RWGame {
 	int max_player = 2;
 	public static ArrayList<Room> rooms = new ArrayList<Room>();
     
-    public boolean isEnd(){
-    	return false;
-    }
 	
     public boolean isEnd(String room_id){
     	boolean isEnd = false;
@@ -62,33 +61,36 @@ public class RWGame {
     	for(Handler handler:room.handlers){
     		if(i==0) isEnd = handler.isGameEnd;
     		isEnd = isEnd && handler.isGameEnd;
+    		i++;
     	}
     	return isEnd;
     }
     
-    public boolean isAllReady(){
-    	boolean ready = false;
-    	if(handlers.size() < 2) return false;
-    	int i = 0;
-    	for(Handler handler:handlers){
-    		if(i==0) ready = handler.ready;
-    		ready = ready && handler.ready;
-    	}
-    	return ready;
-    }
     
     public boolean isAllReady(String room_id){
     	boolean ready = false;
     	Room room = rooms.get(findRoomIndex(room_id));
-    	if(room.handlers.size() < 2) return false;
+    	if(room.handlers.size() < max_player) return false;
     	int i = 0;
     	for(Handler handler:room.handlers){
     		if(i==0) ready = handler.ready;
     		ready = ready && handler.ready;
+    		i++;
     	}
     	return ready;
     }
     
+    @SuppressWarnings("deprecation")
+	public void resetGame(String room_id){
+    	Room room = rooms.get(findRoomIndex(room_id));
+    	System.out.println("Handler: "+handlers.size());
+    	for(Handler handler:room.handlers){
+    		System.out.println("Handler Player: "+handler.player.name);
+    		handler.resetAll();
+    		handler.out.write("");
+    		System.out.println("Handler Player: "+handler.player.name+"is reset: "+handler.isReset);
+    	}
+    }
     
     /**
      * Called by the player threads when a player tries to make a
@@ -190,6 +192,13 @@ public class RWGame {
     	
     }
     
+    public void clearPolling(String room_id){
+    	Room room = rooms.get(findRoomIndex(room_id));
+    	room.removeAllWords();
+    	generateWordsWithTime(Constants.GAME_TIME,room.id);
+		startPolling(rooms.get(findRoomIndex(room.id)));
+    }
+    
     
     public JSONArray getCurrentPlayerJSONArray(){
     	JSONArray jsonArray = new JSONArray();
@@ -238,6 +247,8 @@ public class RWGame {
     		room.addHandler(handler);
     		//add room to rooms list
     		rooms.add(room);
+    		generateWordsWithTime(Constants.GAME_TIME,room.id);
+    		startPolling(rooms.get(findRoomIndex(room.id)));
     		return room.id;
     	}
     	return null;
@@ -277,6 +288,7 @@ public class RWGame {
         private Player player;
         private boolean ready = false;
         private String room_id;
+        private boolean isReset = false;
         private boolean isGameEnd = false;
 
         /**
@@ -293,7 +305,14 @@ public class RWGame {
             
         }
 
-        
+        public void resetAll(){
+        	clearPolling(room_id);
+        	player.points = 0;
+        	ready = false;
+        	isGameEnd = false;
+        	isReset = true;
+        	
+        }
         
         public boolean isReady() {
 			return ready;
@@ -311,7 +330,11 @@ public class RWGame {
         @SuppressWarnings("unchecked")
 		public void run() {
             try {
-
+            	if(isReset){
+            		player.points = 0;
+            	}
+            	// Reset reset status to false incase that this is run by reseting
+            	isReset = false;
                 // Create character streams for the socket.
                 in = new BufferedReader(new InputStreamReader(
                     socket.getInputStream()));
@@ -321,71 +344,102 @@ public class RWGame {
                 // a name is submitted that is not already used.  Note that
                 // checking for the existence of a name and adding the name
                 // must be done while locking the set of names.
-                while (true) {
-                	// Register player
-                	JSONObject submitName = 
-                			CommandHelper.getCommandDataJSON(
-                					CommandConstants.SUBMITNAME, null);
-                    out.println(submitName.toString());
-                    name = in.readLine();
-                    if (name == null) {
-                        return;
-                    }
-                    this.player.name = name;
-                    break;
+                if(name == null){
+	                while (true) {
+	                	// Register player
+	                	JSONObject submitName = 
+	                			CommandHelper.getCommandDataJSON(
+	                					CommandConstants.SUBMITNAME, null);
+	                    out.println(submitName.toString());
+	                    name = in.readLine();
+	                    if (name == null) {
+	                        return;
+	                    }
+	                    this.player.name = name;
+	                    break;
+	                }
+	                
+	                // Now that a successful name has been chosen, add the
+	                // socket's print writer to the set of all writers so
+	                // this client can receive broadcast messages.
+	                
+		            JSONObject nameAccepted = 
+		            		CommandHelper.getCommandDataJSON(
+		            				CommandConstants.NAMEACCEPTED
+		            				, player.getCurrentJson());
+		            out.println(nameAccepted);
+		            
+		            rooms.get(findRoomIndex(room_id)).writers.add(out);
                 }
 
-                // Now that a successful name has been chosen, add the
-                // socket's print writer to the set of all writers so
-                // this client can receive broadcast messages.
-                JSONObject nameAccepted = 
-                		CommandHelper.getCommandDataJSON(
-                				CommandConstants.NAMEACCEPTED
-                				, player.getCurrentJson());
-                out.println(nameAccepted);
-                
-                rooms.get(findRoomIndex(room_id)).writers.add(out);
-                ready = true;
-                if(isAllReady(room_id)){
-                	// All is ready so start the game
-                	// send initial data
-                	ArrayList<String> arrString = new ArrayList<String>();
-                	// Initialize word
-                	generateWordsWithTime(Constants.GAME_TIME,room_id);
-                	startPolling(rooms.get(findRoomIndex(room_id)));
-                	
-                	// Boardcast all player data
-                	JSONArray wordJsonArray = new JSONArray();
-                	for(Word word:rooms.get(findRoomIndex(room_id)).words){
-                		wordJsonArray.add(word.getCurrentJson());
+                // While loop to check if all player is ready to play
+                while(!isAllReady(room_id)){
+                	if(!ready){
+		            	JSONObject submitName = 
+		            			CommandHelper.getCommandDataJSON(
+		            					CommandConstants.CHECK_READY, null);
+		                out.println(submitName.toString());
+		                String status = in.readLine();
+		                System.out.println("Status Ready: "+name+" status: "+status);
+		                if(status.equals(JOptionPane.OK_OPTION+"")){
+		                	ready = true;
+		                }
                 	}
-                	JSONObject wordsJson = CommandHelper
-                			.getCommandDataJSON(CommandConstants.WORDS_DATA
-                			, wordJsonArray);
-                	arrString.add(wordsJson.toString());
+                	if(isAllReady(room_id))
+                		System.out.println("Is all ready?: "+isAllReady(room_id)+" reset?: "+isReset);
+                }
+
+                
+                
+            	// All is ready so start the game
+            	// send initial data
+            	
+            	// Initialize word
+            	System.out.println("Rooms word size: "+rooms.get(findRoomIndex(room_id)).words.size()
+            			+"Pre-rooms word size: "+rooms.get(findRoomIndex(room_id)).pre_words.size());
+            	
+            	// Boardcast all player data
+            	JSONArray wordJsonArray = new JSONArray();
+            	for(Word word:rooms.get(findRoomIndex(room_id)).words){
+            		wordJsonArray.add(word.getCurrentJson());
+            	}
+            	JSONObject wordsJson = CommandHelper
+            			.getCommandDataJSON(CommandConstants.WORDS_DATA
+            			, wordJsonArray);
+            	out.println(wordsJson.toString());
+//                	arrString.add(wordsJson.toString());
                 	
-                	JSONObject readyJson = CommandHelper
-                			.getCommandDataJSON(CommandConstants.ALL_READY
-                			, null);
-                	arrString.add(readyJson.toString());
-                	
-                	// Send info of all player
-                	
+                if(isAllReady(room_id)){
+                	ArrayList<String> arrString = new ArrayList<String>();
                 	JSONObject playerList = CommandHelper
                 			.getCommandDataJSON(CommandConstants.PLAYER_LIST
                 			, getCurrentPlayerJSONArray(room_id));
-                	arrString.add(playerList.toString());
+//                	arrString.add(playerList.toString());
+                	out.println(playerList.toString());
+                	JSONObject readyJson = CommandHelper
+                			.getCommandDataJSON(CommandConstants.ALL_READY
+                			, null);
+//                	arrString.add(readyJson.toString());
+                	out.println(readyJson.toString());
+                	// Send info of all player
                 	for (PrintWriter writer : rooms.get(findRoomIndex(room_id)).writers) {
                     	// This will broadcast command to all player
                     	for(String s:arrString){
                     		writer.println(s);
                     	}
                     }
+                	
                 }
                 // Accept messages from this client and broadcast them.
                 // Ignore other clients that cannot be broadcasted to.
                 while (true) {
+                	// For resetting
+                	if(isReset){
+                		resetAll();
+                		return;
+                	}
                     String command = in.readLine();
+                    
                     Object obj = null;
                     try{
                     	obj=JSONValue.parse(command);
@@ -436,8 +490,27 @@ public class RWGame {
                     	}
                     }
                     else if (commandString.equals(CommandConstants.RESET_REQUEST)){
+                    	//reset data at server
+//                    	resetValue(room_id);
+                    	JSONObject forceReset = CommandHelper
+                    			.getCommandDataJSON(CommandConstants.SERVER_RESET_REQUEST
+                    					, getCurrentPlayerJSONArray(room_id));
+                    	arrString.add(forceReset.toString());
+                    
                     	
-                    	
+                    }else if (commandString.equals(CommandConstants.CONFIRM_RESET)){
+                    	JSONObject forceReset = CommandHelper
+                    			.getCommandDataJSON(CommandConstants.FORCE_RESET
+                    					, getCurrentPlayerJSONArray(room_id));
+//                    	arrString.add(forceReset.toString());
+//                    	for (PrintWriter writer : rooms.get(findRoomIndex(room_id)).writers) {
+//                        	// This will broadcast command to all player
+//                        	for(String s:arrString){
+//                        		writer.println(s);
+//                        	}
+//                        }
+                    	out.println(forceReset.toString());
+                    	isReset = true;
                     }
                     else if (commandString.equals(CommandConstants.QUIT)){
                     	return;
@@ -454,6 +527,12 @@ public class RWGame {
             } finally {
                 // This client is going down!  Remove its name and its print
                 // writer from the sets, and close its socket.
+            	finishedRun();
+            }
+        }
+        public void finishedRun(){
+        	System.out.println("Finally isReset: "+isReset);
+        	if(!isReset){
                 if (out != null) {
                 	rooms.get(findRoomIndex(room_id)).writers.remove(out);
                 }
@@ -464,9 +543,15 @@ public class RWGame {
                     socket.close();
                 } catch (IOException e) {
                 }
-            }
+        	}else{
+        		
+        		// Reset!
+        		run();
+        	}
         }
     }
+    
+    
     
     
 

@@ -8,6 +8,7 @@ import org.json.simple.JSONObject;
 public class Player{
 	String uniqueID;
 	String name;
+	boolean isReady = false;
 	int points = 0;
 
 	
@@ -24,11 +25,24 @@ public class Player{
 		this.name = name;
 		this.points = points;
 	}
+	
+
+	public Player(String uniqueID, String name, boolean isReady, int points) {
+		super();
+		this.uniqueID = uniqueID;
+		this.name = name;
+		this.isReady = isReady;
+		this.points = points;
+	}
 
 
 	public Player(JSONObject jsonObject){
-		this(jsonObject.get("uniqueID").toString(),jsonObject.get("name").toString(),
-				Integer.parseInt(jsonObject.get("points").toString()));
+		this.uniqueID = jsonObject.get("uniqueID").toString();
+		this.name = jsonObject.get("name").toString();
+		if(jsonObject.containsKey("isReady")){
+			this.isReady = Boolean.parseBoolean(jsonObject.get("isReady").toString());
+		}
+		this.points = Integer.parseInt(jsonObject.get("points").toString());
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -36,6 +50,7 @@ public class Player{
 		JSONObject obj = new JSONObject();
 		obj.put("uniqueID", this.uniqueID);
 		obj.put("name", this.name);
+		obj.put("isReady", this.isReady);
 		obj.put("points",this.points);
 		return obj;
 		

@@ -47,5 +47,10 @@ public class Room {
 		return false;
 	}
 	
+	public void removeAllWords(){
+		words = new ArrayList<Word>();
+		pre_words = new ArrayList<Word>();
+	}
+	
 	
 }

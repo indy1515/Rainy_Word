@@ -20,7 +20,10 @@ public class CommandConstants {
 	public static final String GAME_END = "game_end";
 	public static final String GAME_END_RESULT = "game_end_result";
 	public static final String RESET_REQUEST = "reset_request";
+	public static final String SERVER_RESET_REQUEST = "server_reset_request";
 	public static final String FORCE_RESET = "force_reset";
+	public static final String CONFIRM_RESET = "confirm_reset";
+	public static final String CHECK_READY = "check_ready";
 	
 	public static final String OTHER_PLAYER_ENTER = "OTHERPLAYERENTER";
 	public static final String QUIT = "QUIT";
