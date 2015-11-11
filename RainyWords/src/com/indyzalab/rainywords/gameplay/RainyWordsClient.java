@@ -243,8 +243,8 @@ public class RainyWordsClient {
         Socket socket = new Socket(serverAddress, 8901);
         in = new BufferedReader(new InputStreamReader(
             socket.getInputStream()));
+//        192.168.43.200
         out = new PrintWriter(socket.getOutputStream(), true);
-
         // Process all messages from server, according to the protocol.
         while (true) {
         	System.out.println("Recieving Response");
@@ -287,23 +287,22 @@ public class RainyWordsClient {
         				currentPlayer = player;
         				continue;
         			}
+        			boolean found = false;
         			for(Player op : otherPlayer){
         				if(player.uniqueID.equals(op.uniqueID)){
         					// set data
-        					op = player;
+        					op.points = player.points;
+        					op.name = player.name;
+        					op.isReady = player.isReady;
+        					found = true;
         					continue;
         				}
         			}
-        			otherPlayer.add(player);
-        		}
-        		// Assign name to opponent and the player
-        		if(!otherPlayer.isEmpty()){
-        			Player opponent = otherPlayer.get(0);
+        			if(!found) otherPlayer.add(player);
         		}
         		
         	} else if(command.equals(CommandConstants.ALL_READY)){
-            	gamePanel.startPolling();
-            	gamePanel.startTimer();
+            	startGame();
             
         	} else if(command.equals(CommandConstants.PLAYER)){ 
         		JSONObject playerJSON = (JSONObject)jObj.get(CommandConstants.DATA);
@@ -355,7 +354,14 @@ public class RainyWordsClient {
         }
     }
 
+    public void startGame(){
+    	if(gamePanel == null) return;
+    	gamePanel.startPolling();
+    	gamePanel.startTimer();
+    	
+    }
     public void resetGame(){
+    	if(gamePanel == null) return;
     	gamePanel.stopPolling();
     	gamePanel.stopTimer();
     }
@@ -363,12 +369,22 @@ public class RainyWordsClient {
     public void refreshData(){
     	if(currentPlayer == null) return;
     	System.out.println("RefreshData: "+currentPlayer);
-    	myLabel.setText(currentPlayer.name);
+    	String current_status = "Not Ready";
+    	if(currentPlayer.isReady){
+    		current_status = "Ready";
+    	}
+    	myLabel.setText(currentPlayer.name+"("+current_status+")");
     	myPoints.setText(currentPlayer.points+"");
     	if(!otherPlayer.isEmpty()){
     		Player opponent = otherPlayer.get(0);
-    		opLabel.setText(opponent.name);
+    		String opp_status = "Not Ready";
+    		if(opponent.isReady){
+    			opp_status = "Ready";
+        	}
+    		opLabel.setText(opponent.name+"("+opp_status+")");
     		opPoints.setText(opponent.points+"");
+    	}else{
+    		opLabel.setText("Wait for player");
     	}
     }
     

@@ -73,24 +73,24 @@ public class RWGame {
     	if(room.handlers.size() < max_player) return false;
     	int i = 0;
     	for(Handler handler:room.handlers){
-    		if(i==0) ready = handler.ready;
-    		ready = ready && handler.ready;
+    		if(i==0) ready = handler.player.isReady;
+    		ready = ready && handler.player.isReady;
     		i++;
     	}
     	return ready;
     }
     
-    @SuppressWarnings("deprecation")
-	public void resetGame(String room_id){
-    	Room room = rooms.get(findRoomIndex(room_id));
-    	System.out.println("Handler: "+handlers.size());
-    	for(Handler handler:room.handlers){
-    		System.out.println("Handler Player: "+handler.player.name);
-    		handler.resetAll();
-    		handler.out.write("");
-    		System.out.println("Handler Player: "+handler.player.name+"is reset: "+handler.isReset);
-    	}
-    }
+//    @SuppressWarnings("deprecation")
+//	public void resetGame(String room_id){
+//    	Room room = rooms.get(findRoomIndex(room_id));
+//    	System.out.println("Handler: "+handlers.size());
+//    	for(Handler handler:room.handlers){
+//    		System.out.println("Handler Player: "+handler.player.name);
+//    		handler.resetAll();
+//    		handler.out.write("");
+//    		System.out.println("Handler Player: "+handler.player.name+"is reset: "+handler.isReset);
+//    	}
+//    }
     
     /**
      * Called by the player threads when a player tries to make a
@@ -228,6 +228,8 @@ public class RWGame {
         	//TODO: Disconnection
         	// Alert other player that player has disconnected
         }
+        
+        
     }
 
     public String assignPlayerToRoom(Handler handler){
@@ -281,16 +283,26 @@ public class RWGame {
      * and broadcasting its messages.
      */
     public class Handler extends Thread {
-        private String name;
+   
         private Socket socket;
         private BufferedReader in;
         private PrintWriter out;
-        private Player player;
-        private boolean ready = false;
+        public Player player;
+//        private boolean ready = false;
         private String room_id;
         private boolean isReset = false;
         private boolean isGameEnd = false;
 
+        
+        public Handler(Socket socket) {
+            this.socket = socket;
+            this.player = new Player(createPlayerID(),null);
+            // Add player to list bucket
+            handlers.add(this);
+            // Add to room
+            room_id = assignPlayerToRoom(this);
+            
+        }
         /**
          * Constructs a handler thread, squirreling away the socket.
          * All the interesting work is done in the run method.
@@ -308,14 +320,16 @@ public class RWGame {
         public void resetAll(){
         	clearPolling(room_id);
         	player.points = 0;
-        	ready = false;
+        	player.isReady = false;
+//        	ready = false;
         	isGameEnd = false;
         	isReset = true;
         	
         }
         
         public boolean isReady() {
-			return ready;
+        	if(player == null) return false;
+			return player.isReady;
 		}
 
 
@@ -332,26 +346,29 @@ public class RWGame {
             try {
             	if(isReset){
             		player.points = 0;
+            	}else{
+            		// Create character streams for the socket.
+                    in = new BufferedReader(new InputStreamReader(
+                        socket.getInputStream()));
+                    out = new PrintWriter(socket.getOutputStream(), true);
+            		rooms.get(findRoomIndex(room_id)).writers.add(out);
             	}
             	// Reset reset status to false incase that this is run by reseting
             	isReset = false;
-                // Create character streams for the socket.
-                in = new BufferedReader(new InputStreamReader(
-                    socket.getInputStream()));
-                out = new PrintWriter(socket.getOutputStream(), true);
+                
 
                 // Request a name from this client.  Keep requesting until
                 // a name is submitted that is not already used.  Note that
                 // checking for the existence of a name and adding the name
                 // must be done while locking the set of names.
-                if(name == null){
+                if(player.name == null){
 	                while (true) {
 	                	// Register player
 	                	JSONObject submitName = 
 	                			CommandHelper.getCommandDataJSON(
 	                					CommandConstants.SUBMITNAME, null);
 	                    out.println(submitName.toString());
-	                    name = in.readLine();
+	                    String name = in.readLine();
 	                    if (name == null) {
 	                        return;
 	                    }
@@ -369,24 +386,27 @@ public class RWGame {
 		            				, player.getCurrentJson());
 		            out.println(nameAccepted);
 		            
-		            rooms.get(findRoomIndex(room_id)).writers.add(out);
+		            
                 }
 
                 // While loop to check if all player is ready to play
                 while(!isAllReady(room_id)){
-                	if(!ready){
+                	if(!player.isReady){
 		            	JSONObject submitName = 
 		            			CommandHelper.getCommandDataJSON(
 		            					CommandConstants.CHECK_READY, null);
 		                out.println(submitName.toString());
 		                String status = in.readLine();
-		                System.out.println("Status Ready: "+name+" status: "+status);
+		                System.out.println("Status Ready: "+player.name+" status: "+status);
 		                if(status.equals(JOptionPane.OK_OPTION+"")){
-		                	ready = true;
+		                	player.isReady = true;
 		                }
                 	}
                 	if(isAllReady(room_id))
                 		System.out.println("Is all ready?: "+isAllReady(room_id)+" reset?: "+isReset);
+                	
+                	updatePlayerListToClient(false);
+//                	out.println(playerList.toString());
                 }
 
                 
@@ -439,7 +459,7 @@ public class RWGame {
                 		return;
                 	}
                     String command = in.readLine();
-                    
+                    updatePlayerListToClient();
                     Object obj = null;
                     try{
                     	obj=JSONValue.parse(command);
@@ -537,8 +557,11 @@ public class RWGame {
                 	rooms.get(findRoomIndex(room_id)).writers.remove(out);
                 }
                 printServer("Remove Handler from list and room");
-                handlers.remove(this);
-                rooms.get(findRoomIndex(room_id)).handlers.remove(this);
+                clientDisconnected(this);
+      
+                for(Room room:rooms){
+                	System.out.println(room);
+                }
                 try {
                     socket.close();
                 } catch (IOException e) {
@@ -549,6 +572,27 @@ public class RWGame {
         		run();
         	}
         }
+        
+        
+        public void updatePlayerListToClient(){
+        	updatePlayerListToClient(true);
+        }
+        
+        public void updatePlayerListToClient(boolean showLog){
+        	ArrayList<String> arrString = new ArrayList<String>();
+        	JSONObject playerList = CommandHelper
+        			.getCommandDataJSON(CommandConstants.PLAYER_LIST
+        			, getCurrentPlayerJSONArray(room_id));
+        	arrString.add(playerList.toString());
+        	if(showLog) System.out.println(playerList.toString());
+        	for (PrintWriter writer : rooms.get(findRoomIndex(room_id)).writers) {
+            	// This will broadcast command to all player
+            	for(String s:arrString){
+            		writer.println(s);
+            	}
+            }
+        }
+        
     }
     
     

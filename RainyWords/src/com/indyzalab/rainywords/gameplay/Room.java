@@ -51,6 +51,17 @@ public class Room {
 		words = new ArrayList<Word>();
 		pre_words = new ArrayList<Word>();
 	}
+
+	@Override
+	public String toString() {
+		String playerString = "";
+		for(Handler handler: this.handlers){
+			playerString += handler.player+", ";
+		}
+		return "Room [players=" + playerString + ", id=" + id + ", max_player="
+				+ max_player + ", game_end=" + game_end + ", words=" + words.size()
+				+ ", pre_words=" + pre_words.size() + "]";
+	}
 	
 	
 }

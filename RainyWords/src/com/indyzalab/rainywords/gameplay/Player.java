@@ -38,7 +38,11 @@ public class Player{
 
 	public Player(JSONObject jsonObject){
 		this.uniqueID = jsonObject.get("uniqueID").toString();
-		this.name = jsonObject.get("name").toString();
+		if(jsonObject.get("name") == null){
+			this.name = null;
+		}else{
+			this.name = jsonObject.get("name").toString();
+		}
 		if(jsonObject.containsKey("isReady")){
 			this.isReady = Boolean.parseBoolean(jsonObject.get("isReady").toString());
 		}

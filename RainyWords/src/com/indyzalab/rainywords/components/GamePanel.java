@@ -218,7 +218,7 @@ public class GamePanel extends JPanel{
 	Timer timerThread;
 	int current_time = 0;
 	public void startTimer(){
-		current_time = Constants.GAME_TIME/1000;
+		current_time = ((int)Math.ceil(Constants.GAME_TIME/1000.0));
 		timerThread = new Timer(1000,new ActionListener() {
 			
 			@Override
