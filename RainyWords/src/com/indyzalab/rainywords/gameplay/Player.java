@@ -66,6 +66,38 @@ public class Player{
 		return "Player [uniqueID=" + uniqueID + ", name=" + name + ", points="
 				+ points + "]";
 	}
+
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (isReady ? 1231 : 1237);
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + points;
+		result = prime * result
+				+ ((uniqueID == null) ? 0 : uniqueID.hashCode());
+		return result;
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Player other = (Player) obj;
+		if (uniqueID == null) {
+			if (other.uniqueID != null)
+				return false;
+		} else if (!uniqueID.equals(other.uniqueID))
+			return false;
+		return true;
+	}
+	
 	
 	
 	

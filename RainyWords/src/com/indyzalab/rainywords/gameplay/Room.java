@@ -19,7 +19,6 @@ public class Room {
 	public int max_player;
 	public boolean game_end;
 	
-	public static HashSet<PrintWriter> writers = new HashSet<PrintWriter>();
 	List<Word> words = new ArrayList<Word>();
 	ArrayList<Word> pre_words = new ArrayList<Word>();
 	
@@ -45,6 +44,21 @@ public class Room {
 		if(handlers == null) return false;
 		if(handlers.size() >= max_player) return true;
 		return false;
+	}
+	
+	public boolean isFilledName(){
+		if(handlers == null) return false;
+		boolean isFilledName = false;
+		int i = 0;
+		for(Handler handler:handlers){
+			if(i==0) isFilledName = handler.player.name != null;
+			isFilledName = isFilledName && handler.player.name != null;
+		}
+		return isFilledName;
+	}
+	
+	public boolean isFullAndPlayerDataReady(){
+		return isFull()&isFilledName();
 	}
 	
 	public void removeAllWords(){

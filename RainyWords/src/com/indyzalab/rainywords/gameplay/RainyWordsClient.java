@@ -1,5 +1,6 @@
 package com.indyzalab.rainywords.gameplay;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -7,18 +8,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
+import javax.swing.Box;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -31,6 +30,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
+import javax.swing.border.LineBorder;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -166,7 +166,47 @@ public class RainyWordsClient {
 
     
     
-
+    /**
+     * Position start at 0 to x
+     * Row amount are state by max_player_on_line
+     * @param position
+     */
+    public void addElement(int position){
+    	int max_player_on_line = 3;
+    	int row = max_player_on_line/3;
+    	JLabel myPoints = new JLabel("0", SwingConstants.CENTER);
+    	GridBagConstraints c = new GridBagConstraints();
+    	c.fill = GridBagConstraints.HORIZONTAL;
+    	c.weightx = 0.5;
+    	c.gridx = position*2;
+    	c.gridy = row;
+    	upperPanel.add(myPoints,c);
+    	
+    	c.fill = GridBagConstraints.HORIZONTAL;
+    	c.weightx = 0.5;
+    	c.gridx = position*2+1;
+    	c.gridy = row;
+    	upperPanel.add(myLabel,c);
+    }
+    
+    private int showDisconnected(Player player){
+    	
+    	String result = player.name+" has disconnected! Press Ok to find new opponent";
+    	
+    	Object[] options = {"OK"};
+        int n = JOptionPane.showOptionDialog(frame,
+        		result,"Notice",
+                       JOptionPane.PLAIN_MESSAGE,
+                       JOptionPane.QUESTION_MESSAGE,
+                       null,
+                       options,
+                       options[0]);
+        if (n == JOptionPane.OK_OPTION) {
+            System.out.println("OK!"); // do something
+            
+        }
+    	return n;
+    }
     /**
      * Prompt for and return the address of the server.
      */
@@ -221,6 +261,61 @@ public class RainyWordsClient {
             "Welcome to the Chatter",
             JOptionPane.QUESTION_MESSAGE);
     }
+    
+    /**
+     * 
+     */
+    private ServerAddressPort getServerAndPortAddress(){
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints cs = new GridBagConstraints();
+ 
+        cs.fill = GridBagConstraints.HORIZONTAL;
+ 
+        JLabel lbUsername = new JLabel("Server IP: ");
+        cs.gridx = 0;
+        cs.gridy = 0;
+        cs.gridwidth = 1;
+        panel.add(lbUsername, cs);
+ 
+        JTextField xField = new JTextField(20);
+        cs.gridx = 1;
+        cs.gridy = 0;
+        cs.gridwidth = 2;
+        panel.add(xField, cs);
+ 
+        JLabel lbPassword = new JLabel("Port (0-65536): ");
+        cs.gridx = 0;
+        cs.gridy = 1;
+        cs.gridwidth = 1;
+        panel.add(lbPassword, cs);
+ 
+        JTextField yField = new JTextField(20);
+        cs.gridx = 1;
+        cs.gridy = 1;
+        cs.gridwidth = 2;
+        panel.add(yField, cs);
+//        panel.setBorder(new LineBorder(Color.GRAY));
+
+        int result = JOptionPane.showConfirmDialog(null, panel, 
+                 "Please Enter Server and Port", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+        	ServerAddressPort serverAddressPort = null;
+        	String serverAddress = xField.getText();
+        	if(serverAddress == null || serverAddress.equals("")) serverAddress = "localhost";
+        	String portString = yField.getText();
+        	int port = 8901;
+        	if(portString != null && !portString.equals(""));{
+	        	try{
+	        		port = Integer.parseInt(portString);
+	        		serverAddressPort = new ServerAddressPort(serverAddress, port);
+	        	}catch(NumberFormatException e){
+	        		serverAddressPort = getServerAndPortAddress();
+	        	}
+        	}
+        	return new ServerAddressPort(serverAddress, port);
+        }
+        return new ServerAddressPort("localhost",8901);
+    }
 
     /**
      * Prompt for and return the desired screen name.
@@ -233,14 +328,38 @@ public class RainyWordsClient {
             JOptionPane.PLAIN_MESSAGE);
     }
 
+    
+    private void serverError() {
+    	// Check if we win/lose
+    	String result = "The server may not be open or not available right now.\nPlease connect again later or check the IP and port number.";
+    	Object[] options = {"OK"};
+        int n = JOptionPane.showOptionDialog(frame,
+        		result,"Error",
+                       JOptionPane.PLAIN_MESSAGE,
+                       JOptionPane.QUESTION_MESSAGE,
+                       null,
+                       options,
+                       options[0]);
+        if (n == JOptionPane.OK_OPTION) {
+            System.out.println("OK!"); // do something
+            System.exit(1);
+        }
+    }
+    
     /**
      * Connects to the server then enters the processing loop.
      */
-    private void run() throws IOException {
+	private void run() throws IOException {
 
         // Make connection and initialize streams
-        String serverAddress = getServerAddress();
-        Socket socket = new Socket(serverAddress, 8901);
+//        String serverAddress = getServerAddress();
+        ServerAddressPort serverAddressPort = getServerAndPortAddress();
+        Socket socket = null;
+        try{
+        	socket = new Socket(serverAddressPort.getServerAdress(), serverAddressPort.getServerPort());
+        }catch(ConnectException e){
+        	serverError();
+        }
         in = new BufferedReader(new InputStreamReader(
             socket.getInputStream()));
 //        192.168.43.200
@@ -256,7 +375,8 @@ public class RainyWordsClient {
             String command = jObj.get(CommandConstants.COMMAND).toString();
             if (command.equals(CommandConstants.SUBMITNAME)) {
             	System.out.println("Submit Name");
-                out.println(getName());
+            	String name = getName();
+                out.println(name == null?"":name);
             } else if (command.equals(CommandConstants.NAMEACCEPTED)) {
             	// Create current Player
             	currentPlayer = new Player((JSONObject)jObj.get(CommandConstants.DATA));
@@ -268,11 +388,15 @@ public class RainyWordsClient {
             	out.println(getReadyStatus());
             	
             } else if(command.equals(CommandConstants.WORDS_DATA)){
+            	// Clear word_data
             	JSONArray wordJsonArray = (JSONArray)jObj.get(CommandConstants.DATA);
+            	ArrayList<Word> newWord = new ArrayList<Word>();
             	for(Object object:wordJsonArray){
             		JSONObject jsonObject = (JSONObject)object;
-            		gamePanel.addWords(new Word(jsonObject,size));
+            		newWord.add(new Word(jsonObject,size));
+            		
             	}
+            	gamePanel.setPreWords(newWord);
             	
             	
         	} else if(command.equals(CommandConstants.PLAYER_LIST)){
@@ -320,12 +444,18 @@ public class RainyWordsClient {
             	JSONObject word_remove = (JSONObject)jObj.get(CommandConstants.DATA);
             	String removed_word = (String)word_remove.get(CommandConstants.WORD);
             	gamePanel.removeWords(removed_word);
-            	
             	messageArea.append(jObj.get(CommandConstants.DATA) + "\n");
             }else if (command.equals(CommandConstants.SERVER_RESET_REQUEST)){
             	sendConfirmReset();
             }
-            
+            else if (command.equals(CommandConstants.PLAYER_DISCONNECTED)){
+            	JSONObject disconnectPlayerJSONObj = (JSONObject)jObj.get(CommandConstants.DATA);
+            	Player disconnectedPlayer = new Player(disconnectPlayerJSONObj);
+            	removePlayer(disconnectedPlayer);
+            	resetGame();
+            	showDisconnected(disconnectedPlayer);
+            	
+            }
             else if (command.equals(CommandConstants.GAME_END_RESULT)){
             	JSONArray playerJSONArray = (JSONArray)jObj.get(CommandConstants.DATA);
         		for(Object pObj:playerJSONArray){
@@ -354,12 +484,28 @@ public class RainyWordsClient {
         }
     }
 
+    public void addPlayer(){
+    	
+    }
+    
+    public void removePlayer(Player player){
+
+    	boolean removed = otherPlayer.remove(player);
+    	if(removed){
+    		System.out.println("Player Disconnected: "+player.name);
+    	}else{
+    		System.out.println("Player Disconnection not removed");
+    	}
+    	
+    }
+    
     public void startGame(){
     	if(gamePanel == null) return;
     	gamePanel.startPolling();
     	gamePanel.startTimer();
     	
     }
+    
     public void resetGame(){
     	if(gamePanel == null) return;
     	gamePanel.stopPolling();
@@ -433,7 +579,7 @@ public class RainyWordsClient {
 				// TODO Auto-generated method stub
 				//Handle open button action.
 			    if (e.getSource() == menuItem) {
-			        //Reset button
+			        // Reset button
 			    	sendResetRequest();
 			   }
 			}

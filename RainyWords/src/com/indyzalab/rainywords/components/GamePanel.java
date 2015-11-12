@@ -173,6 +173,10 @@ public class GamePanel extends JPanel{
 		pre_words.add(word);
 	}
 	
+	public void setPreWords(ArrayList<Word> words){
+		pre_words = words;
+	}
+	
 	
 	private void add(Word word){
 		words.add(word);

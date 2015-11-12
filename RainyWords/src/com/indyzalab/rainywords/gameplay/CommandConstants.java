@@ -18,6 +18,9 @@ public class CommandConstants {
 	
 	public static final String PLAYER_LIST = "player_list";
 	
+	// Disconnection Command
+	public static final String PLAYER_DISCONNECTED = "player_disconnected";
+	
 	// Game End Command
 	public static final String GAME_END = "game_end";
 	public static final String GAME_END_RESULT = "game_end_result";

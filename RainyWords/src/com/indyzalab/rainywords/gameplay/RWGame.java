@@ -51,12 +51,58 @@ public class RWGame {
 	public static ArrayList<Handler> handlers = new ArrayList<Handler>();
 	int max_player = 2;
 	public static ArrayList<Room> rooms = new ArrayList<Room>();
-    
+    boolean withUI = false;
+	
+	public RWGame() {
+    	this(false);
+    }
+	
+	public RWGame(boolean withUI) {
+    	super();
+    	System.out.println("Start Reading File");
+		// TODO Auto-generated method stub
+		FileReader parser = new FileReader("corncob_lowercase.txt");
+	    try {
+	    	dictionaryWordList = parser.processLineByLine();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    System.out.println("Done Reading File size: "+dictionaryWordList.size());
+	    this.withUI = withUI;
+	    if(this.withUI){
+	    	createUI();
+		}
+    }
+	
+	/**
+	 * Create UI for server
+	 */
+	public void createUI(){
+		
+	}
+	
+	/**
+	 * User for updating UI of the server
+	 */
+	public void updateUI(){
+		
+	}
+	
+	/**
+	 * This is trigger when any data is updated
+	 */
+	public void dataUpdate(){
+		if(this.withUI){
+	    	// Update UI
+			updateUI();
+	    }
+	}
 	
     public boolean isEnd(String room_id){
     	boolean isEnd = false;
     	Room room = rooms.get(findRoomIndex(room_id));
-    	if(room.handlers.size() < 2) return false;
+    	if(room.handlers.size() < room.max_player) return false;
     	int i = 0;
     	for(Handler handler:room.handlers){
     		if(i==0) isEnd = handler.isGameEnd;
@@ -66,11 +112,16 @@ public class RWGame {
     	return isEnd;
     }
     
+    public boolean isFullAndPlayerDataReady(String room_id){
+    	Room room = rooms.get(findRoomIndex(room_id));
+    	if(room.handlers.size() < room.max_player) return false;
+    	return room.isFullAndPlayerDataReady();
+    }
     
     public boolean isAllReady(String room_id){
     	boolean ready = false;
     	Room room = rooms.get(findRoomIndex(room_id));
-    	if(room.handlers.size() < max_player) return false;
+    	if(room.handlers.size() < room.max_player) return false;
     	int i = 0;
     	for(Handler handler:room.handlers){
     		if(i==0) ready = handler.player.isReady;
@@ -120,19 +171,7 @@ public class RWGame {
     }
      
     
-    public RWGame() {
-    	super();
-    	System.out.println("Start Reading File");
-		// TODO Auto-generated method stub
-		FileReader parser = new FileReader("corncob_lowercase.txt");
-	    try {
-	    	dictionaryWordList = parser.processLineByLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	    System.out.println("Done Reading File size: "+dictionaryWordList.size());
-    }
+    
     Thread generateWordThread;
 
     
@@ -195,6 +234,7 @@ public class RWGame {
     public void clearPolling(String room_id){
     	Room room = rooms.get(findRoomIndex(room_id));
     	room.removeAllWords();
+    	System.out.println("Clear room polling room_id: "+room.id);
     	generateWordsWithTime(Constants.GAME_TIME,room.id);
 		startPolling(rooms.get(findRoomIndex(room.id)));
     }
@@ -227,6 +267,21 @@ public class RWGame {
         }else{
         	//TODO: Disconnection
         	// Alert other player that player has disconnected
+        	// Get other player handler only 
+        	// (The disconnected player are already removed)
+        	for(Handler h : room.handlers){
+        		// Send JSON About disconnection
+        		ArrayList<String > arrString = new ArrayList<String>();
+        		JSONObject playerDisconnected = CommandHelper.getCommandDataJSON(
+        				CommandConstants.PLAYER_DISCONNECTED
+        				, handler.player.getCurrentJson());
+        		JSONObject forceReset = CommandHelper
+            			.getCommandDataJSON(CommandConstants.SERVER_RESET_REQUEST
+            					, getCurrentPlayerJSONArray(room.id));
+        		arrString.add(playerDisconnected.toString());
+        		arrString.add(forceReset.toString());
+        		broadcasting(arrString,room.id);
+        	}
         }
         
         
@@ -239,6 +294,7 @@ public class RWGame {
     		for(Room room:rooms){
         		if(!room.isFull()){
         			room.addHandler(handler);
+        			dataUpdate();
         			return room.id;
         		}
         	}
@@ -249,12 +305,23 @@ public class RWGame {
     		room.addHandler(handler);
     		//add room to rooms list
     		rooms.add(room);
+    		dataUpdate();
     		generateWordsWithTime(Constants.GAME_TIME,room.id);
     		startPolling(rooms.get(findRoomIndex(room.id)));
     		return room.id;
     	}
     	return null;
     }
+    
+    public void broadcasting(ArrayList<String> arrString,String room_id){
+   	 for (Handler handler : rooms.get(findRoomIndex(room_id)).handlers) {
+        	// This will broadcast command to all player
+        	PrintWriter writer = handler.out;
+        	for(String s:arrString){
+        		writer.println(s);
+        	}
+        }
+   }
     public int findRoomIndex(String id){
     	int i = 0;
     	for(Room room:rooms){
@@ -351,7 +418,6 @@ public class RWGame {
                     in = new BufferedReader(new InputStreamReader(
                         socket.getInputStream()));
                     out = new PrintWriter(socket.getOutputStream(), true);
-            		rooms.get(findRoomIndex(room_id)).writers.add(out);
             	}
             	// Reset reset status to false incase that this is run by reseting
             	isReset = false;
@@ -373,6 +439,7 @@ public class RWGame {
 	                        return;
 	                    }
 	                    this.player.name = name;
+	                    updatePlayerListToClient(false);
 	                    break;
 	                }
 	                
@@ -389,6 +456,11 @@ public class RWGame {
 		            
                 }
 
+                
+                while(!isFullAndPlayerDataReady(room_id)){
+                	
+                }
+                updatePlayerListToClient(false);
                 // While loop to check if all player is ready to play
                 while(!isAllReady(room_id)){
                 	if(!player.isReady){
@@ -400,14 +472,17 @@ public class RWGame {
 		                System.out.println("Status Ready: "+player.name+" status: "+status);
 		                if(status.equals(JOptionPane.OK_OPTION+"")){
 		                	player.isReady = true;
+		                	updatePlayerListToClient(false);
 		                }
                 	}
-                	if(isAllReady(room_id))
+                	if(isAllReady(room_id)){
                 		System.out.println("Is all ready?: "+isAllReady(room_id)+" reset?: "+isReset);
+                		updatePlayerListToClient(false);
+                	}
                 	
-                	updatePlayerListToClient(false);
 //                	out.println(playerList.toString());
                 }
+                updatePlayerListToClient(false);
 
                 
                 
@@ -426,6 +501,7 @@ public class RWGame {
             	JSONObject wordsJson = CommandHelper
             			.getCommandDataJSON(CommandConstants.WORDS_DATA
             			, wordJsonArray);
+            	System.out.println("Send Word Data: "+wordsJson.toString());
             	out.println(wordsJson.toString());
 //                	arrString.add(wordsJson.toString());
                 	
@@ -442,12 +518,7 @@ public class RWGame {
 //                	arrString.add(readyJson.toString());
                 	out.println(readyJson.toString());
                 	// Send info of all player
-                	for (PrintWriter writer : rooms.get(findRoomIndex(room_id)).writers) {
-                    	// This will broadcast command to all player
-                    	for(String s:arrString){
-                    		writer.println(s);
-                    	}
-                    }
+                	
                 	
                 }
                 // Accept messages from this client and broadcast them.
@@ -535,12 +606,7 @@ public class RWGame {
                     else if (commandString.equals(CommandConstants.QUIT)){
                     	return;
                     }
-                    for (PrintWriter writer : rooms.get(findRoomIndex(room_id)).writers) {
-                    	// This will broadcast command to all player
-                    	for(String s:arrString){
-                    		writer.println(s);
-                    	}
-                    }
+                    broadcasting(arrString, room_id);
                 }
             } catch (IOException e) {
                 System.out.println(e);
@@ -553,12 +619,8 @@ public class RWGame {
         public void finishedRun(){
         	System.out.println("Finally isReset: "+isReset);
         	if(!isReset){
-                if (out != null) {
-                	rooms.get(findRoomIndex(room_id)).writers.remove(out);
-                }
                 printServer("Remove Handler from list and room");
                 clientDisconnected(this);
-      
                 for(Room room:rooms){
                 	System.out.println(room);
                 }
@@ -573,6 +635,7 @@ public class RWGame {
         	}
         }
         
+       
         
         public void updatePlayerListToClient(){
         	updatePlayerListToClient(true);
@@ -585,12 +648,8 @@ public class RWGame {
         			, getCurrentPlayerJSONArray(room_id));
         	arrString.add(playerList.toString());
         	if(showLog) System.out.println(playerList.toString());
-        	for (PrintWriter writer : rooms.get(findRoomIndex(room_id)).writers) {
-            	// This will broadcast command to all player
-            	for(String s:arrString){
-            		writer.println(s);
-            	}
-            }
+        	broadcasting(arrString,room_id);
+        	dataUpdate();
         }
         
     }
