@@ -67,7 +67,8 @@ public class RainyWordsClient {
     private static JMenuBar menuBar;
 	private static JMenu menu;
 	private static JMenuItem menuItem;
-	private static JMenuItem menuItemLoad;
+	private static JMenuItem menuItemMute;
+	private static JMenuItem menuItemUnmute;
 	private static JMenuItem menuExit;
     
 	static AudioInputStream audioInputStream;
@@ -402,6 +403,9 @@ public class RainyWordsClient {
         	System.out.println("Recieving Response");
             String line = in.readLine();
             System.out.println("Line :"+line);
+            if(line == null){
+            	continue;
+            }
             Object obj=JSONValue.parse(line);
             JSONObject jObj=(JSONObject)obj;
             
@@ -638,19 +642,34 @@ public class RainyWordsClient {
 			   }
 			}
 		});
-		menuItemLoad = new JMenuItem("Mute",
+		menuItemMute = new JMenuItem("Mute",
                 KeyEvent.VK_T);
-		menuItemLoad.addActionListener(new ActionListener() {
+		menuItemMute.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				//Handle open button action.
-			    if (e.getSource() == menuItemLoad) {
+			    if (e.getSource() == menuItemMute) {
 			    	// Reset button 
 			    	clip.stop();
 			    }
 			}
+		});
+		
+		menuItemUnmute = new JMenuItem("Unmute",
+                KeyEvent.VK_T);
+		menuItemUnmute.addActionListener(new ActionListener() {
+		   
+		   @Override
+		   public void actionPerformed(ActionEvent e) {
+		    // TODO Auto-generated method stub
+		    //Handle open button action.
+		       if (e.getSource() == menuItemUnmute) {
+		        // Reset button 
+		        clip.start();
+		       }
+		   }
 		});
 		
 		menuExit = new JMenuItem("Exit");
@@ -664,7 +683,8 @@ public class RainyWordsClient {
 		});
 //		jLabel.setIcon(icon);
 		menu.add(menuItem);
-		menu.add(menuItemLoad);
+		menu.add(menuItemMute);
+		menu.add(menuItemUnmute);
 		menu.addSeparator();
 		menu.add(menuExit);
 		

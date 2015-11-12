@@ -13,14 +13,17 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+import com.indyzalab.rainywords.components.RoomList;
 import com.indyzalab.rainywords.components.Word;
 import com.indyzalab.rainywords.utils.FileReader;
+import com.indyzalab.rainywords.utils.RoomListListener;
 
 
 
@@ -75,20 +78,76 @@ public class RWGame {
 		}
     }
 	
+	RoomList roomList = null;
 	/**
 	 * Create UI for server
 	 */
 	public void createUI(){
-		
+		JFrame frame = new JFrame("Choose the Room");
+	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    roomList = new RoomList();
+	    roomList.setListener(new RoomListListener() {
+			
+			@Override
+			public void onClickResetButton(int index) {
+				// TODO Auto-generated method stub
+				onClickResetButtonTrigger(index);
+			}
+		});
+	    frame.setContentPane(roomList);
+	    frame.setSize(260, 200);
+	    frame.setVisible(true);
 	}
 	
 	/**
 	 * User for updating UI of the server
 	 */
 	public void updateUI(){
+		if(roomList == null) return;
+		if(!this.withUI) return;
+		Thread t = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				roomList.setListData(getCurrentRoomStat());
+			}
+		});
+		t.start();
 		
 	}
 	
+	public void onClickResetButtonTrigger(int index) {
+		// TODO Auto-generated method stub
+		Room room = rooms.get(index);
+		for(Handler h: room.handlers){
+	    	JSONObject forceReset = CommandHelper
+	    			.getCommandDataJSON(CommandConstants.SERVER_RESET_REQUEST
+	    					, getCurrentPlayerJSONArray(room.id));
+	    	h.out.println(forceReset.toString());
+	    	h.out.flush();
+		}
+		
+	}
+	
+	
+	public ArrayList<String> getCurrentRoomStat(){
+		ArrayList<String> stringList = new ArrayList<String>();
+		if(rooms == null) return stringList;
+		for(Room room: rooms){
+			String room_info = "["+room.handlers.size()+"/"+room.max_player+"] ";
+			int i = 0;
+			for(Handler h:room.handlers){
+				if(i != 0) room_info += ", ";
+				String name = h.player.name;
+				if(name == null) name = "loading...";
+				room_info += name;
+				i++;
+			}
+			stringList.add(room_info);
+		}
+		return stringList;
+	}
 	/**
 	 * This is trigger when any data is updated
 	 */
@@ -318,6 +377,7 @@ public class RWGame {
         		broadcasting(arrString,room.id);
         	}
         }
+        updateUI();
         
         
     }
@@ -500,10 +560,11 @@ public class RWGame {
                 while(!isFullAndPlayerDataReady(room_id)){
                 	
                 }
-                while(isSomeNotEnd(room_id)){
-                	
-                }
                 System.out.println("After full room: "+rooms.get(findRoomIndex(room_id)));
+                while(isSomeNotEnd(room_id)){
+
+                }
+                
                 for(Handler h:rooms.get(findRoomIndex(room_id)).handlers){
                 	System.out.println("Player: "+h.player+" isEnd: "+h.isGameEnd);
                 }
@@ -511,7 +572,7 @@ public class RWGame {
                 // While loop to check if all player is ready to play
                 while(!isAllReady(room_id)){
                 	while(!isFullAndPlayerDataReady(room_id)){
-                    	
+
                     }
                 	if(!player.isReady){
                 		while(true){
@@ -682,6 +743,7 @@ public class RWGame {
             	finishedRun();
             }
         }
+        
         public void finishedRun(){
         	System.out.println("Finally player.isReset: "+player.isReset);
         	if(!player.isReset){

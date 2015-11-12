@@ -7,22 +7,16 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-/*import java.io.File;
-import java.io.IOException;
+import java.io.File;
 
 import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException; */
 import javax.swing.JButton;
-//import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.indyzalab.rainywords.gameplay.RainyWordsClient;
-import com.indyzalab.rainywords.gameplay.RainyWordsServer;
 
 public class MainPage extends JFrame implements ActionListener{
 	static JPanel header;
@@ -35,12 +29,8 @@ public class MainPage extends JFrame implements ActionListener{
 	static JButton hButton;
 	static JButton jButton;
 	static JButton jsButton;
-	/*static JButton playMusic;
-	static JButton stopMusic;
+
 	
-	static AudioInputStream audioInputStream;
-	static Clip clip;
-	private File file; */
 	
 	public MainPage(String title){
 		super(title);
@@ -75,17 +65,12 @@ public class MainPage extends JFrame implements ActionListener{
         singPart = new JPanel(new GridBagLayout());
         singPart.setBackground(new Color (137, 189, 227));
         sButton = new JButton("Single Player");
-        sButton.addActionListener(new ActionListener() { //single
-            
-        	@Override public void actionPerformed(ActionEvent e) {
-        		try {
-						//RainyWordsClient.main(new String[] {"123"});
-					} catch (Exception e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-                }
-          	});
+        sButton.addActionListener(new ActionListener() { //Single
+        	@Override 
+        	public void actionPerformed(ActionEvent e) {
+        		onClickSinglePlayer();
+            }
+        });
         singPart.add(sButton);
         
         hostPart = new JPanel(new GridBagLayout());
@@ -93,16 +78,11 @@ public class MainPage extends JFrame implements ActionListener{
         hButton = new JButton("Host");
         hostPart.add(hButton);
         hButton.addActionListener(new ActionListener() { //host
-            
-        	@Override public void actionPerformed(ActionEvent e) {
-        		try {
-						//RainyWordsClient.main(new String[] {"123"});
-					} catch (Exception e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-                }
-          	});
+        	@Override 
+        	public void actionPerformed(ActionEvent e) {
+        		onClickHostGame();
+            }
+        });
         
         
         joinPart = new JPanel(new GridBagLayout());
@@ -112,15 +92,12 @@ public class MainPage extends JFrame implements ActionListener{
         //mButton.setPreferredSize(new Dimension (400,100));
         jButton.addActionListener(new ActionListener() { //join
             
-        	@Override public void actionPerformed(ActionEvent e) {
-        		try {
-						RainyWordsClient.main(new String[] {"123"});
-					} catch (Exception e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-                }
-          	});
+        	@Override 
+        	public void actionPerformed(ActionEvent e) {
+        		onClickJoinGame();
+                
+        	}
+         });
         
         joinPart.add(jButton);
         
@@ -128,61 +105,13 @@ public class MainPage extends JFrame implements ActionListener{
         jservePart.setBackground(new Color (137, 189, 227));
         jsButton = new JButton("Join Server");
         jsButton.addActionListener(new ActionListener() { //join server
-            
-        	@Override public void actionPerformed(ActionEvent e) {
-        		try {
-						//RainyWordsClient.main(new String[] {"123"});
-					} catch (Exception e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-                }
-          	});
+        	@Override 
+        	public void actionPerformed(ActionEvent e) {
+        		onClickJoinServerGame();
+            }
+        });
         jservePart.add(jsButton);
         
-        /* playMusic = new JButton("Play");
-        playMusic.addActionListener(new ActionListener(){
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				JFileChooser choose_song = new JFileChooser();
-				try {
-					audioInputStream = AudioSystem.
-							getAudioInputStream(new File("src/LOVE ME RIGHT.wav").getAbsoluteFile());
-					try {
-						clip = AudioSystem.getClip();
-						clip.open(audioInputStream);
-						clip.start();
-					} catch (LineUnavailableException e1){
-						e1.printStackTrace();
-					}
-				} catch (UnsupportedAudioFileException e2){
-					e2.printStackTrace();
-				} catch (IOException e3){
-					e3.printStackTrace();
-				}
-			}
-        	
-        });
-        
-        stopMusic = new JButton ("Stop");
-        stopMusic.addActionListener(new ActionListener(){
-        	@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-        		try {
-        			clip.stop();
-        		} catch (Exception e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-        		}
-        	}	
-        });
-        
-        jservePart.add(playMusic);
-        jservePart.add(stopMusic);
-        */
         
         choicePart = new JPanel(new GridLayout(2,2));
         choicePart.add(singPart);
@@ -199,6 +128,40 @@ public class MainPage extends JFrame implements ActionListener{
         
     }
 
+	
+	public static void onClickSinglePlayer(){
+		
+	}
+	
+	public static void onClickHostGame(){
+		
+	}
+	
+	public static void onClickJoinGame(){
+		
+	}
+	
+	public static void onClickJoinServerGame(){
+		try {
+			Thread t = new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					try {
+						RainyWordsClient.main(new String[] {"123"});
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			});
+			t.start();
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {

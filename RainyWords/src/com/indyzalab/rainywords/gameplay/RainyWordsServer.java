@@ -12,7 +12,7 @@ public class RainyWordsServer {
         System.out.println("Rainy Words Server is Running");
         try {
         	int i = 0;
-        	RWGame game = new RWGame();
+        	RWGame game = new RWGame(true);
             while(true){
                 RWGame.Handler player1 = game.new Handler(listener.accept());
                 player1.start();

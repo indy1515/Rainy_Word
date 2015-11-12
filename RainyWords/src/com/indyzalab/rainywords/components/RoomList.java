@@ -3,6 +3,7 @@ package com.indyzalab.rainywords.components;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -11,20 +12,25 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import com.indyzalab.rainywords.utils.RoomListListener;
+
 public class RoomList extends JPanel {
 
   JList<String> list;
 
   DefaultListModel<String> model;
+  RoomListListener listener = new RoomListListener() {
+	
+	@Override
+	public void onClickResetButton(int index) {
+		// TODO Auto-generated method stub
+		
+	}
+  };
   
-  String labels[] = { "Room 1", "Room 2", "Room 3", "Room 4", "Room 5", "Room 6", "Room 7" };
-
   public RoomList() {
     setLayout(new BorderLayout());
     model = new DefaultListModel<String>();
-    for (int i = 0, n = labels.length; i < n; i++) {
-        model.addElement(labels[i]);
-    }
    
     list = new JList<String>(model);
     JScrollPane pane = new JScrollPane(list);
@@ -32,20 +38,42 @@ public class RoomList extends JPanel {
 
     resetButton.addActionListener(new ActionListener() {
     	public void actionPerformed(ActionEvent e) {
-    	      int selected[] = list.getSelectedIndices();
-    	      
-    	      for (int i = 0; i < selected.length; i++) {
-    	        String element = (String) list.getModel().getElementAt(selected[i]);
-    	        int index = selected[i]+1;
-    	        System.out.print(element + "  " + index);
-    	      }
-    	    }
+    	      int index = getSelectedIndex();
+    	      listener.onClickResetButton(index);
+    	 }
     });
 
     add(pane, BorderLayout.NORTH);
     add(resetButton, BorderLayout.WEST);
   }
 
+  
+  
+  public void setListener(RoomListListener listener) {
+	this.listener = listener;
+  }
+
+
+
+public int getSelectedIndex(){
+	  int selected[] = list.getSelectedIndices();
+      int index_return = 0;
+      for (int i = 0; i < selected.length; i++) {
+        String element = (String) list.getModel().getElementAt(selected[i]);
+        int index = selected[i];
+        System.out.print(element + "  " + index);
+        index_return = selected[i];
+        break;
+      }
+      return index_return;
+  }
+  public void setListData(ArrayList<String> arrayList){
+	  model = new DefaultListModel<String>();
+	  for(String s:arrayList){
+		  model.addElement(s);
+	  }
+	  list.setModel(model);
+  }
   public static void main(String s[]) {
     JFrame frame = new JFrame("Choose the Room");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
