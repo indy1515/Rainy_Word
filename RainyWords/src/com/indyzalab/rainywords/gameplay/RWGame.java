@@ -99,7 +99,7 @@ public class RWGame {
 	    }
 	}
 	
-    public boolean isEnd(String room_id){
+    public synchronized boolean  isEnd(String room_id){
     	boolean isEnd = false;
     	Room room = rooms.get(findRoomIndex(room_id));
     	if(room.handlers.size() < room.max_player) return false;
@@ -112,15 +112,28 @@ public class RWGame {
     	return isEnd;
     }
     
-    public boolean isResetAvailable(String room_id){
+    public synchronized boolean isSomeNotEnd(String room_id){
+    	boolean isEnd = false;
+    	Room room = rooms.get(findRoomIndex(room_id));
+    	if(room.handlers.size() < room.max_player) return false;
+    	int i = 0;
+    	for(Handler handler:room.handlers){
+    		if(i==0) isEnd = handler.isGameEnd;
+    		isEnd = isEnd || handler.isGameEnd;
+    		i++;
+    	}
+    	return isEnd;
+    }
+    
+    public synchronized boolean isResetAvailable(String room_id){
     	boolean isResetAvailable = false;
     	Room room = rooms.get(findRoomIndex(room_id));
     	if(room.handlers.size() < room.max_player) return false;
     	int i = 0;
     	System.out.println("Room: "+room);
     	for(Handler handler:room.handlers){
-    		if(i==0) isResetAvailable = !handler.isReset;
-    		isResetAvailable = isResetAvailable && !handler.isReset;
+    		if(i==0) isResetAvailable = !handler.player.isReset;
+    		isResetAvailable = isResetAvailable && !handler.player.isReset;
     		i++;
     		
     	}
@@ -128,13 +141,28 @@ public class RWGame {
     	return isResetAvailable&&isAllReady(room_id);
     }
     
-    public boolean isFullAndPlayerDataReady(String room_id){
+    public synchronized boolean isForceResetAvailable(String room_id){
+    	boolean isResetAvailable = false;
     	Room room = rooms.get(findRoomIndex(room_id));
     	if(room.handlers.size() < room.max_player) return false;
+    	int i = 0;
+    	System.out.println("Room: "+room);
+    	for(Handler handler:room.handlers){
+    		if(i==0) isResetAvailable = !handler.player.isReset;
+    		isResetAvailable = isResetAvailable && !handler.player.isReset;
+    		i++;
+    		
+    	}
+    	
+    	return isResetAvailable;
+    }
+    
+    public synchronized boolean isFullAndPlayerDataReady(String room_id){
+    	Room room = rooms.get(findRoomIndex(room_id));
     	return room.isFullAndPlayerDataReady();
     }
     
-    public boolean isAllReady(String room_id){
+    public synchronized boolean isAllReady(String room_id){
     	boolean ready = false;
     	Room room = rooms.get(findRoomIndex(room_id));
     	if(room.handlers.size() < room.max_player) return false;
@@ -285,7 +313,8 @@ public class RWGame {
             			.getCommandDataJSON(CommandConstants.SERVER_RESET_REQUEST
             					, getCurrentPlayerJSONArray(room.id));
         		arrString.add(playerDisconnected.toString());
-        		arrString.add(forceReset.toString());
+        		
+        		if(!handler.isGameEnd) arrString.add(forceReset.toString());
         		broadcasting(arrString,room.id);
         	}
         }
@@ -326,6 +355,7 @@ public class RWGame {
         	for(String s:arrString){
         		writer.println(s);
         	}
+        	writer.flush();
         }
    }
     public int findRoomIndex(String id){
@@ -363,7 +393,6 @@ public class RWGame {
         public Player player;
 //        private boolean ready = false;
         private String room_id;
-        private boolean isReset = false;
         private boolean isGameEnd = false;
 
         
@@ -396,7 +425,7 @@ public class RWGame {
         	player.isReady = false;
 //        	ready = false;
         	isGameEnd = false;
-        	isReset = true;
+        	player.isReset = true;
         	
         }
         
@@ -417,7 +446,7 @@ public class RWGame {
         @SuppressWarnings("unchecked")
 		public void run() {
             try {
-            	if(isReset){
+            	if(player.isReset){
             		player.points = 0;
             	}else{
             		// Create character streams for the socket.
@@ -426,7 +455,7 @@ public class RWGame {
                     out = new PrintWriter(socket.getOutputStream(), true);
             	}
             	// Reset reset status to false incase that this is run by reseting
-            	isReset = false;
+            	player.isReset = false;
                 
 
                 // Request a name from this client.  Keep requesting until
@@ -462,27 +491,45 @@ public class RWGame {
 		            
                 }
 
+                System.out.println("Before full room: "+rooms.get(findRoomIndex(room_id)));
+                updatePlayerListToClient(false);
+                for(Handler h:rooms.get(findRoomIndex(room_id)).handlers){
+                	System.out.println("Player: "+h.player+" isEnd: "+h.isGameEnd);
+                }
                 
                 while(!isFullAndPlayerDataReady(room_id)){
                 	
                 }
+                while(isSomeNotEnd(room_id)){
+                	
+                }
+                System.out.println("After full room: "+rooms.get(findRoomIndex(room_id)));
+                for(Handler h:rooms.get(findRoomIndex(room_id)).handlers){
+                	System.out.println("Player: "+h.player+" isEnd: "+h.isGameEnd);
+                }
                 updatePlayerListToClient(false);
                 // While loop to check if all player is ready to play
                 while(!isAllReady(room_id)){
+                	while(!isFullAndPlayerDataReady(room_id)){
+                    	
+                    }
                 	if(!player.isReady){
-		            	JSONObject submitName = 
-		            			CommandHelper.getCommandDataJSON(
-		            					CommandConstants.CHECK_READY, null);
-		                out.println(submitName.toString());
-		                String status = in.readLine();
-		                System.out.println("Status Ready: "+player.name+" status: "+status);
-		                if(status.equals(JOptionPane.OK_OPTION+"")){
-		                	player.isReady = true;
-		                	updatePlayerListToClient(false);
-		                }
+                		while(true){
+			            	JSONObject submitName = 
+			            			CommandHelper.getCommandDataJSON(
+			            					CommandConstants.CHECK_READY, null);
+			                out.println(submitName.toString());
+			                String status = in.readLine();
+			                System.out.println("Status Ready: "+player.name+" status: "+status);
+			                if(status.equals(JOptionPane.OK_OPTION+"")){
+			                	player.isReady = true;
+			                	updatePlayerListToClient(false);
+			                	break;
+			                }
+                		}
                 	}
                 	if(isAllReady(room_id)){
-                		System.out.println("Is all ready?: "+isAllReady(room_id)+" reset?: "+isReset);
+                		System.out.println("Is all ready?: "+isAllReady(room_id)+" reset?: "+player.isReset);
                 		updatePlayerListToClient(false);
                 	}
                 	
@@ -523,6 +570,7 @@ public class RWGame {
                 			, null);
 //                	arrString.add(readyJson.toString());
                 	out.println(readyJson.toString());
+                	out.flush();
                 	// Send info of all player
                 	
                 	
@@ -531,11 +579,12 @@ public class RWGame {
                 // Ignore other clients that cannot be broadcasted to.
                 while (true) {
                 	// For resetting
-                	if(isReset){
+                	if(player.isReset){
                 		resetAll();
                 		return;
                 	}
                     String command = in.readLine();
+                    System.out.println(command);
                     updatePlayerListToClient();
                     Object obj = null;
                     try{
@@ -545,8 +594,12 @@ public class RWGame {
                     	// Remove from room
                     	printServer("Error");
                     }
-                    JSONObject jObj=(JSONObject)obj;
-                    System.out.println(command);
+                    JSONObject jObj = null;
+                    try{
+                    	jObj=(JSONObject)obj;
+                    }catch(ClassCastException e){
+                    	continue;
+                    }
                     if (command == null) {
                         return;
                     }
@@ -555,15 +608,7 @@ public class RWGame {
                     if (commandString.equals(CommandConstants.PLAYER_COMPLETE)){
                     	String removedWord = jObj.get(CommandConstants.DATA).toString();
                     	if(wordExist(removedWord)){
-                    		int letters = removedWord.length();
-                    		int points = 0;
-                    		if (letters >= 1 && letters <= 5){
-                    			points = 3;
-                    		} else if (letters >= 6 && letters <= 10){
-                    			points = 5;
-                    		} else { points = 10;
-                    		}
-                    		
+                    		int points = pointsCalculation(removedWord);
                     		JSONObject removeDataJObj = new JSONObject();
                     		removeDataJObj.put(CommandConstants.PLAYER,player.getCurrentJson());
                     		removeDataJObj.put(CommandConstants.GAIN_POINTS, points);  
@@ -586,12 +631,17 @@ public class RWGame {
                     }
                     else if (commandString.equals(CommandConstants.GAME_END)){
                     	isGameEnd = true;
+//                    	player.isReady = false;
+                    	System.out.println("Is Game End: "+isEnd(room_id));
+                    	while(!isEnd(room_id)){}
                     	if(isEnd(room_id)){
 	                    	// Notice all player that the game end and show result
 	                    	JSONObject playerList = CommandHelper
 	                    			.getCommandDataJSON(CommandConstants.GAME_END_RESULT
 	                    			, getCurrentPlayerJSONArray(room_id));
-	                    	arrString.add(playerList.toString());
+	                    	out.println(playerList.toString());
+	                    	out.flush();
+//	                    	arrString.add(playerList.toString());
                     	}
                     }
                     else if (commandString.equals(CommandConstants.RESET_REQUEST)){
@@ -605,17 +655,23 @@ public class RWGame {
                     	if(isResetAvailable(room_id)){
                     		arrString.add(forceReset.toString());
                     	}
+                    	if(rooms.get(findRoomIndex(room_id)).handlers.size() <= 1){
+                    		out.println(forceReset.toString());
+                    	}
                     	
                     }else if (commandString.equals(CommandConstants.CONFIRM_RESET)){
+                    	player.isReset = true;
                     	JSONObject forceReset = CommandHelper
                     			.getCommandDataJSON(CommandConstants.FORCE_RESET
                     					, getCurrentPlayerJSONArray(room_id));
                     	out.println(forceReset.toString());
-                    	isReset = true;
+
+                    	
                     }
                     else if (commandString.equals(CommandConstants.QUIT)){
                     	return;
                     }
+                    updatePlayerListToClient(false);
                     broadcasting(arrString, room_id);
                 }
             } catch (IOException e) {
@@ -627,8 +683,8 @@ public class RWGame {
             }
         }
         public void finishedRun(){
-        	System.out.println("Finally isReset: "+isReset);
-        	if(!isReset){
+        	System.out.println("Finally player.isReset: "+player.isReset);
+        	if(!player.isReset){
                 printServer("Remove Handler from list and room");
                 clientDisconnected(this);
                 for(Room room:rooms){
@@ -660,6 +716,18 @@ public class RWGame {
         	if(showLog) System.out.println(playerList.toString());
         	broadcasting(arrString,room_id);
         	dataUpdate();
+        }
+        
+        public int pointsCalculation(String removedWord){
+        	int letters = removedWord.length();
+    		int points = 0;
+    		if (letters >= 1 && letters <= 5){
+    			points = 3;
+    		} else if (letters >= 6 && letters <= 10){
+    			points = 5;
+    		} else { points = 10;
+    		}
+    		return points;
         }
         
     }

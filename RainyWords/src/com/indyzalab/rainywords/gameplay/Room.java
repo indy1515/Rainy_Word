@@ -51,14 +51,18 @@ public class Room {
 		boolean isFilledName = false;
 		int i = 0;
 		for(Handler handler:handlers){
-			if(i==0) isFilledName = handler.player.name != null;
-			isFilledName = isFilledName && handler.player.name != null;
+			if(i==0) {
+				isFilledName = (handler.player.name != null);
+			}else{
+				isFilledName = isFilledName && (handler.player.name != null);
+			}
+			i++;
 		}
 		return isFilledName;
 	}
 	
 	public boolean isFullAndPlayerDataReady(){
-		return isFull()&isFilledName();
+		return isFull()&&isFilledName();
 	}
 	
 	public void removeAllWords(){

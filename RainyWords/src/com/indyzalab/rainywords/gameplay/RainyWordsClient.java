@@ -118,7 +118,7 @@ public class RainyWordsClient {
 				// Game end 
 				JSONObject jObj = CommandHelper
             			.getCommandDataJSON(CommandConstants.GAME_END
-            					, null);
+            					, currentPlayer.getCurrentJson());
         		out.println(jObj.toString());
         		textField.setText("");
         		
@@ -259,6 +259,7 @@ public class RainyWordsClient {
     }
     
     private int getReadyStatus(){
+    	if(currentPlayer.isReady) return -1;
     	Object[] options = {"I'm ready!"};
     	String content = "Are you ready?";
     	return JOptionPane.showOptionDialog(frame,
@@ -389,6 +390,7 @@ public class RainyWordsClient {
         while (true) {
         	System.out.println("Recieving Response");
             String line = in.readLine();
+            System.out.println("Line :"+line);
             Object obj=JSONValue.parse(line);
             JSONObject jObj=(JSONObject)obj;
             
@@ -398,6 +400,7 @@ public class RainyWordsClient {
             	System.out.println("Submit Name");
             	String name = getName();
                 out.println(name == null?"":name);
+                out.flush();
             } else if (command.equals(CommandConstants.NAMEACCEPTED)) {
             	// Create current Player
             	currentPlayer = new Player((JSONObject)jObj.get(CommandConstants.DATA));
@@ -408,7 +411,7 @@ public class RainyWordsClient {
             } else if (command.equals(CommandConstants.CHECK_READY)){
             	System.out.println("Check ready?");
             	out.println(getReadyStatus());
-            	
+            	out.flush();
             } else if(command.equals(CommandConstants.WORDS_DATA)){
             	// Clear word_data
             	JSONArray wordJsonArray = (JSONArray)jObj.get(CommandConstants.DATA);
@@ -500,7 +503,7 @@ public class RainyWordsClient {
             	System.out.println("Force Reset");
             	resetGame();
             }else{
-            	messageArea.append(line + "\n");
+            	
             }
             refreshData();
         }
@@ -641,17 +644,24 @@ public class RainyWordsClient {
     
     
     public void sendResetRequest(){
+    	
     	JSONObject jObj = CommandHelper
-    			.getCommandDataJSON(CommandConstants.RESET_REQUEST, null);
+    			.getCommandDataJSON(CommandConstants.RESET_REQUEST, currentPlayer.getCurrentJson());
 		out.println(jObj.toString());
+		out.flush();
 		textField.setText("");
     }
     
     public void sendConfirmReset(){
+    	if(currentPlayer.isReset) return;
+    	System.out.println("Send Confirm Reset");
     	JSONObject jObj = CommandHelper
-    			.getCommandDataJSON(CommandConstants.CONFIRM_RESET, null);
+    			.getCommandDataJSON(CommandConstants.CONFIRM_RESET, currentPlayer.getCurrentJson());
+    	
 		out.println(jObj.toString());
+		out.flush();
 		textField.setText("");
+    	
     	
     }
     /**

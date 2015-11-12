@@ -9,6 +9,7 @@ public class Player{
 	String uniqueID;
 	String name;
 	boolean isReady = false;
+	boolean isReset = false;
 	int points = 0;
 
 	
@@ -46,6 +47,9 @@ public class Player{
 		if(jsonObject.containsKey("isReady")){
 			this.isReady = Boolean.parseBoolean(jsonObject.get("isReady").toString());
 		}
+		if(jsonObject.containsKey("isReset")){
+			this.isReset = Boolean.parseBoolean(jsonObject.get("isReset").toString());
+		}
 		this.points = Integer.parseInt(jsonObject.get("points").toString());
 	}
 	
@@ -55,16 +59,19 @@ public class Player{
 		obj.put("uniqueID", this.uniqueID);
 		obj.put("name", this.name);
 		obj.put("isReady", this.isReady);
+		obj.put("isReset", this.isReset);
 		obj.put("points",this.points);
 		return obj;
 		
 	}
 
 
+	
+
 	@Override
 	public String toString() {
-		return "Player [uniqueID=" + uniqueID + ", name=" + name + ", points="
-				+ points + "]";
+		return "Player [uniqueID=" + uniqueID + ", name=" + name + ", isReady=" + isReady + ", isReset=" + isReset
+				+ ", points=" + points + "]";
 	}
 
 
