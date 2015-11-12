@@ -25,6 +25,7 @@ public class GamePanel extends JPanel{
 	ArrayList<Word> pre_words = new ArrayList<Word>();
 	
 	LineEffect lineEffect = new LineEffect();
+	PointEffect pointEffect = new PointEffect();
 	ArrayList<String> dictionaryWordList = new ArrayList<String>();
 	boolean isLoading = true;
 	
@@ -94,6 +95,7 @@ public class GamePanel extends JPanel{
         	
         }
         lineEffect.paintComponent(g);
+        pointEffect.paintComponent(g);
         if(isStart){
         	
         }
@@ -132,6 +134,7 @@ public class GamePanel extends JPanel{
 		for(Word word:wordList){
 			// Do create effect!
 			lineEffect.addLineList(new Line(d.width/2, d.height, word));
+			pointEffect.addPointList(new Point(word.point, word));
 		}
 		words.removeAll(wordList);
 	}
@@ -149,11 +152,12 @@ public class GamePanel extends JPanel{
 					
 	}
 	
-	public boolean removeWords(String word,Color color){
+	public boolean removeWords(String word,Color color,int point){
 		for(Word w:words){
 			if(w.name.equals(word)){
 				w.setAsRemovedState();
 				w.destroyColor = color;
+				w.point = point;
 				return true;
 			}
 		}

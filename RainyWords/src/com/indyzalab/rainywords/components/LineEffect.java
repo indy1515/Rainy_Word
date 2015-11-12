@@ -50,7 +50,7 @@ public class LineEffect extends JLabel{
 		checkLine();
 		for(Line line:lineList){
 			g2.setColor(line.color);
-			g2.setStroke(new BasicStroke(5));
+			g2.setStroke(new BasicStroke(3));
 			g2.draw(new Line2D.Double(line.x1, line.y1, line.x2, line.y2));
 			line.addTime(1);
 		}

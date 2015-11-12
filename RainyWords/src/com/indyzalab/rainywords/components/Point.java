@@ -8,15 +8,14 @@ public class Point {
 	int millisec = 0;
 	int max_millisec = 50;
 	Color color = Color.BLACK;
-	public Point(int point,int x1, int y1, Word word){
+	public Point(int point, Word word){
 		this.point = point;
 		this.x1 = (int)word.pos_x+word.getWidth()/2;
 		this.y1 = (int)word.pos_y-word.getHeight()/2;
 		this.color = word.destroyColor;
 	}
 	
-	public Point(int x1, int y1, Word word,Color color){
-		this.point = point;
+	public Point(Word word,Color color){
 		this.x1 = (int)word.pos_x+word.getWidth()/2;
 		this.y1 = (int)word.pos_y-word.getHeight()/2;
 		this.color = color;
@@ -39,15 +38,15 @@ public class Point {
 	
 	public String getPointString(){
 		String sign = point<0? "-":"+";
-		
+		if(point == 0) return "MISS";
 		return sign+point;
 	}
 	
 	public int getCalculatedX(){
-		return x1+millisec;
+		return x1;
 	}
 	
 	public int getCalculatedY(){
-		return y1;
+		return y1-millisec;
 	}
 }

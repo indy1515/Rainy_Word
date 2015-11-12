@@ -487,7 +487,8 @@ public class RainyWordsClient {
             	JSONObject word_remove = (JSONObject)jObj.get(CommandConstants.DATA);
             	String removed_word = (String)word_remove.get(CommandConstants.WORD);
             	Player player = new Player((JSONObject)word_remove.get(CommandConstants.PLAYER));
-            	gamePanel.removeWords(removed_word,player.getColor());
+            	int point = Integer.parseInt(word_remove.get(CommandConstants.GAIN_POINTS).toString());
+            	gamePanel.removeWords(removed_word,player.getColor(),point);
 //            	messageArea.append(jObj.get(CommandConstants.DATA) + "\n");
             }else if (command.equals(CommandConstants.SERVER_RESET_REQUEST)){
             	sendConfirmReset();
@@ -673,7 +674,7 @@ public class RainyWordsClient {
 		    //Handle open button action.
 		       if (e.getSource() == menuItemUnmute) {
 		        // Reset button 
-		        clip.start();
+		    	   clip.start();
 		       }
 		   }
 		});
