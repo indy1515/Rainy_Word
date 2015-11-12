@@ -555,7 +555,15 @@ public class RWGame {
                     if (commandString.equals(CommandConstants.PLAYER_COMPLETE)){
                     	String removedWord = jObj.get(CommandConstants.DATA).toString();
                     	if(wordExist(removedWord)){
-                    		int points = removedWord.length();
+                    		int letters = removedWord.length();
+                    		int points = 0;
+                    		if (letters >= 1 && letters <= 5){
+                    			points = 3;
+                    		} else if (letters >= 6 && letters <= 10){
+                    			points = 5;
+                    		} else { points = 10;
+                    		}
+                    		
                     		JSONObject removeDataJObj = new JSONObject();
                     		removeDataJObj.put(CommandConstants.PLAYER,player.getCurrentJson());
                     		removeDataJObj.put(CommandConstants.GAIN_POINTS, points);  
