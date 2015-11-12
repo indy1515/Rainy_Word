@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -17,6 +18,11 @@ import java.net.Socket;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.Box;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -64,6 +70,10 @@ public class RainyWordsClient {
 	private static JMenuItem menuItemLoad;
 	private static JMenuItem menuExit;
     
+	static AudioInputStream audioInputStream;
+	static Clip clip;
+	private File file;
+	
     /**
      * Constructs the client by laying out the GUI and registering a
      * listener with the textfield so that pressing Return in the
@@ -160,6 +170,7 @@ public class RainyWordsClient {
             }
         });
         createMenu();
+        playSong();
         setCurrentTimeLabel(Constants.GAME_TIME/1000);
 //        showGameResult();
     }
@@ -572,6 +583,24 @@ public class RainyWordsClient {
         return output;
      }
 
+    public void playSong() {
+    	JFileChooser choose_song = new JFileChooser();
+		try {
+			audioInputStream = AudioSystem.
+					getAudioInputStream(new File("src/LOVE ME RIGHT.wav").getAbsoluteFile());
+			try {
+				clip = AudioSystem.getClip();
+				clip.open(audioInputStream);
+				clip.start();
+			} catch (LineUnavailableException e1){
+				e1.printStackTrace();
+			}
+		} catch (UnsupportedAudioFileException e2){
+			e2.printStackTrace();
+		} catch (IOException e3){
+			e3.printStackTrace();
+		}
+    }
     
     private void createMenu(){
 		//Where the GUI is created:
@@ -609,7 +638,7 @@ public class RainyWordsClient {
 			   }
 			}
 		});
-		menuItemLoad = new JMenuItem("Load Background",
+		menuItemLoad = new JMenuItem("Mute",
                 KeyEvent.VK_T);
 		menuItemLoad.addActionListener(new ActionListener() {
 			
@@ -619,7 +648,7 @@ public class RainyWordsClient {
 				//Handle open button action.
 			    if (e.getSource() == menuItemLoad) {
 			    	// Reset button 
-			    	
+			    	clip.stop();
 			    }
 			}
 		});

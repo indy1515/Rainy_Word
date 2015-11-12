@@ -1,39 +1,25 @@
 package com.indyzalab.rainywords.components;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
+/*import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Random;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.swing.BoxLayout;
+import javax.sound.sampled.UnsupportedAudioFileException; */
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
+//import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.border.LineBorder;
-import javax.swing.text.Highlighter;
 
 import com.indyzalab.rainywords.gameplay.RainyWordsClient;
 import com.indyzalab.rainywords.gameplay.RainyWordsServer;
@@ -49,11 +35,12 @@ public class MainPage extends JFrame implements ActionListener{
 	static JButton hButton;
 	static JButton jButton;
 	static JButton jsButton;
-	static JButton playMusic;
+	/*static JButton playMusic;
+	static JButton stopMusic;
 	
 	static AudioInputStream audioInputStream;
 	static Clip clip;
-	private File file;
+	private File file; */
 	
 	public MainPage(String title){
 		super(title);
@@ -153,7 +140,7 @@ public class MainPage extends JFrame implements ActionListener{
           	});
         jservePart.add(jsButton);
         
-        playMusic = new JButton("Play");
+        /* playMusic = new JButton("Play");
         playMusic.addActionListener(new ActionListener(){
 
 			@Override
@@ -162,7 +149,7 @@ public class MainPage extends JFrame implements ActionListener{
 				JFileChooser choose_song = new JFileChooser();
 				try {
 					audioInputStream = AudioSystem.
-							getAudioInputStream(new File("src/LOVE ME RIGHT.mp3").getAbsoluteFile());
+							getAudioInputStream(new File("src/LOVE ME RIGHT.wav").getAbsoluteFile());
 					try {
 						clip = AudioSystem.getClip();
 						clip.open(audioInputStream);
@@ -179,7 +166,23 @@ public class MainPage extends JFrame implements ActionListener{
         	
         });
         
-        jservePart.add(jsButton);
+        stopMusic = new JButton ("Stop");
+        stopMusic.addActionListener(new ActionListener(){
+        	@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+        		try {
+        			clip.stop();
+        		} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+        		}
+        	}	
+        });
+        
+        jservePart.add(playMusic);
+        jservePart.add(stopMusic);
+        */
         
         choicePart = new JPanel(new GridLayout(2,2));
         choicePart.add(singPart);
