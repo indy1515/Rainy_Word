@@ -16,7 +16,9 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import com.indyzalab.rainywords.HostListener;
 import com.indyzalab.rainywords.gameplay.RainyWordsClient;
+import com.indyzalab.rainywords.gameplay.RainyWordsServer;
 
 public class MainPage extends JFrame implements ActionListener{
 	static JPanel header;
@@ -134,11 +136,39 @@ public class MainPage extends JFrame implements ActionListener{
 	}
 	
 	public static void onClickHostGame(){
+		System.out.println("Host Server");
+		final Thread clientThread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				createClient(true);
+			}
+		});
+		Thread hostThread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				createHost(false);
+				
+			}
+		});
 		
+		hostThread.start();
+		clientThread.start();
 	}
 	
 	public static void onClickJoinGame(){
-		
+		final Thread clientThread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				createClient(true);
+			}
+		});
+		clientThread.start();
 	}
 	
 	public static void onClickJoinServerGame(){
@@ -148,12 +178,7 @@ public class MainPage extends JFrame implements ActionListener{
 				@Override
 				public void run() {
 					// TODO Auto-generated method stub
-					try {
-						RainyWordsClient.main(new String[] {"123"});
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					createClient(true);
 				}
 			});
 			t.start();
@@ -163,6 +188,30 @@ public class MainPage extends JFrame implements ActionListener{
 		}
 	}
 	
+	
+	public static void createHost(boolean withUI){
+		try {
+			RainyWordsServer.startServer(withUI);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("Host Error");
+			e.printStackTrace();
+		}
+	}
+	
+	public static void createClient(boolean useCustomIpPort){
+		try {
+			if(useCustomIpPort){
+				RainyWordsClient.main(null);
+			}else{
+				RainyWordsClient.startClient(useCustomIpPort);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("Host Error");
+			e.printStackTrace();
+		}
+	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub

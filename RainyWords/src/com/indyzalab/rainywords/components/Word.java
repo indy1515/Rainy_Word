@@ -19,6 +19,8 @@ public class Word extends JLabel{
 	double pos_x = -1;
 	double pos_y = -1;
 	Dimension d;
+	
+	Color destroyColor = Color.BLACK;
 	final static int STATE_EXIST = 0;
 	final static int STATE_DESTROYING = 1;
 	final static int STATE_REMOVED = 2;

@@ -1,5 +1,6 @@
 package com.indyzalab.rainywords.gameplay;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.io.StringWriter;
 
@@ -11,7 +12,12 @@ public class Player{
 	boolean isReady = false;
 	boolean isReset = false;
 	int points = 0;
-
+	Color color = Color.BLACK;
+	Color[] colors = {Color.BLUE,Color.GREEN
+			,Color.ORANGE,Color.MAGENTA
+			,Color.BLACK,Color.CYAN
+			,Color.GRAY,Color.PINK};
+	
 	
 	public Player(String uniqueID,String name) {
 		super();
@@ -51,6 +57,7 @@ public class Player{
 			this.isReset = Boolean.parseBoolean(jsonObject.get("isReset").toString());
 		}
 		this.points = Integer.parseInt(jsonObject.get("points").toString());
+		
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -65,6 +72,9 @@ public class Player{
 		
 	}
 
+	public Color getColor(){
+		return colors[Integer.parseInt(uniqueID)%colors.length];
+	}
 
 	
 

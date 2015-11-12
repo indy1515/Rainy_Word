@@ -63,7 +63,7 @@ public class RainyWordsClient {
     GamePanel gamePanel;
     Dimension size = new Dimension(Constants.GAMEUI_WIDTH,Constants.GAMEUI_HEIGHT);
     
-    
+    private static boolean useCustomIpPort =true;
     private static JMenuBar menuBar;
 	private static JMenu menu;
 	private static JMenuItem menuItem;
@@ -387,7 +387,10 @@ public class RainyWordsClient {
 
         // Make connection and initialize streams
 //        String serverAddress = getServerAddress();
-        ServerAddressPort serverAddressPort = getServerAndPortAddress();
+		ServerAddressPort serverAddressPort = new ServerAddressPort("192.168.43.200", 8901);
+		if(useCustomIpPort){
+			serverAddressPort = getServerAndPortAddress();
+		}
         Socket socket = null;
         try{
         	socket = new Socket(serverAddressPort.getServerAdress(), serverAddressPort.getServerPort());
@@ -483,8 +486,9 @@ public class RainyWordsClient {
             } else if (command.equals(CommandConstants.WORD_REMOVED)){
             	JSONObject word_remove = (JSONObject)jObj.get(CommandConstants.DATA);
             	String removed_word = (String)word_remove.get(CommandConstants.WORD);
-            	gamePanel.removeWords(removed_word);
-            	messageArea.append(jObj.get(CommandConstants.DATA) + "\n");
+            	Player player = new Player((JSONObject)word_remove.get(CommandConstants.PLAYER));
+            	gamePanel.removeWords(removed_word,player.getColor());
+//            	messageArea.append(jObj.get(CommandConstants.DATA) + "\n");
             }else if (command.equals(CommandConstants.SERVER_RESET_REQUEST)){
             	sendConfirmReset();
             }
@@ -560,6 +564,7 @@ public class RainyWordsClient {
     		current_status = "Ready";
     	}
     	myLabel.setText(currentPlayer.name+"("+current_status+")");
+    	myLabel.setForeground(currentPlayer.getColor());
     	myPoints.setText(currentPlayer.points+"");
     	if(!otherPlayer.isEmpty()){
     		Player opponent = otherPlayer.get(0);
@@ -568,6 +573,7 @@ public class RainyWordsClient {
     			opp_status = "Ready";
         	}
     		opLabel.setText(opponent.name+"("+opp_status+")");
+    		opLabel.setForeground(opponent.getColor());
     		opPoints.setText(opponent.points+"");
     	}else{
     		opLabel.setText("Wait for player");
@@ -723,6 +729,18 @@ public class RainyWordsClient {
         client.run();
     }
     
+    public static void startClient(boolean useNewCustomIpPort){
+    	useCustomIpPort = useNewCustomIpPort;
+    	RainyWordsClient client = new RainyWordsClient();
+        client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        client.frame.setVisible(true);
+        try {
+			client.run();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
     
 
 }
