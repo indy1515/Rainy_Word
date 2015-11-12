@@ -30,6 +30,7 @@ public class GamePanel extends JPanel{
 	double rate_of_y_axis_speed = 5;
 	double fall_speed = 100;
 	double word_delay = Constants.WORD_DELAY;
+	boolean isStart = false;
 	Dimension d;
 	GamePanelListener listener = new GamePanelListener() {
 		
@@ -80,6 +81,8 @@ public class GamePanel extends JPanel{
 	public void addGamePanelListener(GamePanelListener listener){
 		this.listener = listener;
 	}
+	
+	
 	@Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -87,6 +90,9 @@ public class GamePanel extends JPanel{
         for(int i = 0;i<words.size();i++){
 //        	Word word = iter.next();
         	words.get(i).paintComponent(g);
+        }
+        if(isStart){
+        	
         }
     }
 	
@@ -222,6 +228,7 @@ public class GamePanel extends JPanel{
 	Timer timerThread;
 	int current_time = 0;
 	public void startTimer(){
+		isStart =true;
 		current_time = ((int)Math.ceil(Constants.GAME_TIME/1000.0));
 		timerThread = new Timer(1000,new ActionListener() {
 			
@@ -242,6 +249,7 @@ public class GamePanel extends JPanel{
 		timerThread.start();
 	}
 	public void stopTimer(){
+		isStart = false;
 		current_time = 0;
 		timerThread.stop();
 	}

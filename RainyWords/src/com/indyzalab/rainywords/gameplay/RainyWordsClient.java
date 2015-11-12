@@ -225,25 +225,44 @@ public class RainyWordsClient {
     		// equal
     		result = "DRAW!";
     	}
-    	Object[] options = {"OK"};
+    	
+    	result += "\nYour score: "+currentPlayer.points;
+    	Object[] options = {"EXIT","RESET GAME"};
         int n = JOptionPane.showOptionDialog(frame,
         		result,"Result",
                        JOptionPane.PLAIN_MESSAGE,
                        JOptionPane.QUESTION_MESSAGE,
                        null,
                        options,
-                       options[0]);
-        if (n == JOptionPane.OK_OPTION) {
-            System.out.println("OK!"); // do something
-            
+                       options[1]);
+        if (n == 0) {
+            System.out.println("EXIT!"); // do something
+            System.exit(1);
+        }else if(n== 1){
+        	System.out.println("RESET");
+        	sendResetRequest();
         }
+        System.out.println("Int n: "+n);
     	return n;
     }
     
-    private int getReadyStatus(){
-    	Object[] options = {"OK"};
+    private int showWelcomeMessage(){
+    	Object[] options = {"Let's Go!"};
+    	String content = "Welcome "+currentPlayer.name+"!";
     	return JOptionPane.showOptionDialog(frame,
-        		"Press OK when you are ready","Ready?",
+        		content,"Welcome to Rainy Word!",
+                       JOptionPane.PLAIN_MESSAGE,
+                       JOptionPane.QUESTION_MESSAGE,
+                       null,
+                       options,
+                       options[0]);
+    }
+    
+    private int getReadyStatus(){
+    	Object[] options = {"I'm ready!"};
+    	String content = "Are you ready?";
+    	return JOptionPane.showOptionDialog(frame,
+        		content,"Ready?",
                        JOptionPane.PLAIN_MESSAGE,
                        JOptionPane.QUESTION_MESSAGE,
                        null,
@@ -304,7 +323,9 @@ public class RainyWordsClient {
         	if(serverAddress == null || serverAddress.equals("")) serverAddress = "localhost";
         	String portString = yField.getText();
         	int port = 8901;
-        	if(portString != null && !portString.equals(""));{
+        	if(portString == null || portString.equals("")){
+        		// if not found
+        	}else{
 	        	try{
 	        		port = Integer.parseInt(portString);
 	        		serverAddressPort = new ServerAddressPort(serverAddress, port);
@@ -382,6 +403,7 @@ public class RainyWordsClient {
             	currentPlayer = new Player((JSONObject)jObj.get(CommandConstants.DATA));
             	System.out.println("Current Player: "+currentPlayer);
                 textField.setEditable(true);
+                showWelcomeMessage();
                 
             } else if (command.equals(CommandConstants.CHECK_READY)){
             	System.out.println("Check ready?");

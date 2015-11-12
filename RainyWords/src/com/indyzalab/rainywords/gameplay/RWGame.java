@@ -112,6 +112,22 @@ public class RWGame {
     	return isEnd;
     }
     
+    public boolean isResetAvailable(String room_id){
+    	boolean isResetAvailable = false;
+    	Room room = rooms.get(findRoomIndex(room_id));
+    	if(room.handlers.size() < room.max_player) return false;
+    	int i = 0;
+    	System.out.println("Room: "+room);
+    	for(Handler handler:room.handlers){
+    		if(i==0) isResetAvailable = !handler.isReset;
+    		isResetAvailable = isResetAvailable && !handler.isReset;
+    		i++;
+    		
+    	}
+    	
+    	return isResetAvailable&&isAllReady(room_id);
+    }
+    
     public boolean isFullAndPlayerDataReady(String room_id){
     	Room room = rooms.get(findRoomIndex(room_id));
     	if(room.handlers.size() < room.max_player) return false;
@@ -131,17 +147,7 @@ public class RWGame {
     	return ready;
     }
     
-//    @SuppressWarnings("deprecation")
-//	public void resetGame(String room_id){
-//    	Room room = rooms.get(findRoomIndex(room_id));
-//    	System.out.println("Handler: "+handlers.size());
-//    	for(Handler handler:room.handlers){
-//    		System.out.println("Handler Player: "+handler.player.name);
-//    		handler.resetAll();
-//    		handler.out.write("");
-//    		System.out.println("Handler Player: "+handler.player.name+"is reset: "+handler.isReset);
-//    	}
-//    }
+
     
     /**
      * Called by the player threads when a player tries to make a
@@ -586,20 +592,16 @@ public class RWGame {
                     	JSONObject forceReset = CommandHelper
                     			.getCommandDataJSON(CommandConstants.SERVER_RESET_REQUEST
                     					, getCurrentPlayerJSONArray(room_id));
-                    	arrString.add(forceReset.toString());
-                    
+                    	
+                    	// check if reset already send and no confirmation yet
+                    	if(isResetAvailable(room_id)){
+                    		arrString.add(forceReset.toString());
+                    	}
                     	
                     }else if (commandString.equals(CommandConstants.CONFIRM_RESET)){
                     	JSONObject forceReset = CommandHelper
                     			.getCommandDataJSON(CommandConstants.FORCE_RESET
                     					, getCurrentPlayerJSONArray(room_id));
-//                    	arrString.add(forceReset.toString());
-//                    	for (PrintWriter writer : rooms.get(findRoomIndex(room_id)).writers) {
-//                        	// This will broadcast command to all player
-//                        	for(String s:arrString){
-//                        		writer.println(s);
-//                        	}
-//                        }
                     	out.println(forceReset.toString());
                     	isReset = true;
                     }
