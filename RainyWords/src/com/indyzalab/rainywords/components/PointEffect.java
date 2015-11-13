@@ -2,6 +2,7 @@ package com.indyzalab.rainywords.components;
 
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
@@ -45,8 +46,8 @@ public class PointEffect extends JLabel{
 			AlphaComposite composite = 
 			  AlphaComposite.getInstance(type, point.getAlpha());
 			g2.setComposite(composite);
+			g2.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 15));
 			g2.setColor(point.color);
-			g2.setStroke(new BasicStroke(2));
 			g2.drawString(point.getPointString(), point.getCalculatedX(), point.getCalculatedY());
 			point.addTime(1);
 		}

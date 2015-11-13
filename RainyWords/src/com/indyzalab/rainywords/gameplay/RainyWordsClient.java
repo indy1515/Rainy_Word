@@ -70,6 +70,9 @@ public class RainyWordsClient {
 	private static JMenuItem menuItemMute;
 	private static JMenuItem menuItemUnmute;
 	private static JMenuItem menuExit;
+	
+	private static JMenu menuOption;
+	private static JMenuItem menuItemToggleBackground;
     
 	static AudioInputStream audioInputStream;
 	static Clip clip;
@@ -491,6 +494,9 @@ public class RainyWordsClient {
             	Player player = new Player((JSONObject)word_remove.get(CommandConstants.PLAYER));
             	int point = Integer.parseInt(word_remove.get(CommandConstants.GAIN_POINTS).toString());
             	gamePanel.removeWords(removed_word,player.getColor(),point);
+            	if(player.uniqueID.equals(currentPlayer.uniqueID)){
+            		gamePanel.incrementCombo(1);
+            	}
 //            	messageArea.append(jObj.get(CommandConstants.DATA) + "\n");
             }else if (command.equals(CommandConstants.SERVER_RESET_REQUEST)){
             	sendConfirmReset();
@@ -629,7 +635,12 @@ public class RainyWordsClient {
 		menu.setMnemonic(KeyEvent.VK_A);
 		menu.getAccessibleContext().setAccessibleDescription(
 		        "The only menu in this program that has menu items");
+		menuOption = new JMenu("Option");
+		menuOption.setMnemonic(KeyEvent.VK_A);
+		menuOption.getAccessibleContext().setAccessibleDescription(
+		        "The only menu in this program that has menu items");
 		menuBar.add(menu);
+		menuBar.add(menuOption);
 
 		//a group of JMenuItems
 		menuItem = new JMenuItem("Reset Game",
@@ -652,7 +663,7 @@ public class RainyWordsClient {
 			}
 		});
 		menuItemMute = new JMenuItem("Mute",
-                KeyEvent.VK_T);
+                KeyEvent.VK_2);
 		menuItemMute.addActionListener(new ActionListener() {
 			
 			@Override
@@ -667,7 +678,7 @@ public class RainyWordsClient {
 		});
 		
 		menuItemUnmute = new JMenuItem("Unmute",
-                KeyEvent.VK_T);
+                KeyEvent.VK_3);
 		menuItemUnmute.addActionListener(new ActionListener() {
 		   
 		   @Override
@@ -681,6 +692,22 @@ public class RainyWordsClient {
 		   }
 		});
 		
+		menuItemToggleBackground = new JMenuItem("Freeze/unfreeze Backgournd",
+                KeyEvent.VK_4);
+		menuItemToggleBackground.addActionListener(new ActionListener() {
+		   
+		   @Override
+		   public void actionPerformed(ActionEvent e) {
+		    // TODO Auto-generated method stub
+		    //Handle open button action.
+		       if (e.getSource() == menuItemToggleBackground) {
+		        // Reset button 
+		    	   gamePanel.allowBackground = !gamePanel.allowBackground;
+		       }
+		   }
+		});
+		
+		
 		menuExit = new JMenuItem("Exit");
 		menuExit.addActionListener(new ActionListener() {
 			
@@ -692,10 +719,11 @@ public class RainyWordsClient {
 		});
 //		jLabel.setIcon(icon);
 		menu.add(menuItem);
-		menu.add(menuItemMute);
-		menu.add(menuItemUnmute);
 		menu.addSeparator();
 		menu.add(menuExit);
+		menuOption.add(menuItemMute);
+		menuOption.add(menuItemUnmute);
+		menuOption.add(menuItemToggleBackground);
 		
 		frame.setJMenuBar(menuBar);
 	}
@@ -729,6 +757,7 @@ public class RainyWordsClient {
     	RainyWordsClient client = new RainyWordsClient();
         client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         client.frame.setVisible(true);
+        client.frame.setResizable(false);
         client.run();
     }
     
@@ -737,6 +766,7 @@ public class RainyWordsClient {
     	RainyWordsClient client = new RainyWordsClient();
         client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         client.frame.setVisible(true);
+        client.frame.setResizable(false);
         try {
 			client.run();
 		} catch (IOException e) {

@@ -178,7 +178,7 @@ public class MainPage extends JFrame implements ActionListener{
 				@Override
 				public void run() {
 					// TODO Auto-generated method stub
-					createClient(true);
+					createClient(false);
 				}
 			});
 			t.start();

@@ -3,6 +3,7 @@ package com.indyzalab.rainywords.components;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
@@ -88,6 +89,7 @@ public class Word extends JLabel{
 			AlphaComposite composite = 
 			  AlphaComposite.getInstance(type,1.0f);
 			g2.setComposite(composite);
+			g2.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 15));
 			g2.setColor(Color.BLACK);
 //			g2.drawString(this.name,(int)( d.width*pos_x-(3.75*this.name.length())), (int)(d.height*pos_y));
 			int width = g.getFontMetrics().stringWidth(this.name);

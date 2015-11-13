@@ -1,7 +1,7 @@
 package com.indyzalab.rainywords.gameplay;
 
 public class Constants {
-	public static final int GAMEUI_WIDTH = 500;
+	public static final int GAMEUI_WIDTH = 800;
 	public static final int GAMEUI_HEIGHT = 500;
 	public static final int WORD_DELAY = 1000; // Delay between word in millis
 //	public static final int GAME_TIME = 180000;

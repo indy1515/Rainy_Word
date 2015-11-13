@@ -27,6 +27,8 @@ public class GamePanel extends JPanel{
 	LineEffect lineEffect = new LineEffect();
 	PointEffect pointEffect = new PointEffect();
 	DiscoBackgroundEffect discoBackgroundEffect;
+	ComboEffect comboEffect;
+	public boolean allowBackground = true;
 	ArrayList<String> dictionaryWordList = new ArrayList<String>();
 	boolean isLoading = true;
 	
@@ -52,6 +54,7 @@ public class GamePanel extends JPanel{
 	public GamePanel(Dimension d){
 		this.d = d;
 		discoBackgroundEffect = new DiscoBackgroundEffect(d);
+		comboEffect = new ComboEffect(d);
 		setPreferredSize(d);
 		setBackground(Color.WHITE);
 //		setOpaque(true);
@@ -90,7 +93,10 @@ public class GamePanel extends JPanel{
 	@Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        discoBackgroundEffect.paintComponent(g);
+        if(allowBackground){
+        	discoBackgroundEffect.paintComponent(g);
+        }
+        comboEffect.paintComponent(g);
         Iterator<Word> iter = words.iterator();
         for(int i = 0;i<words.size();i++){
 //        	Word word = iter.next();
@@ -175,6 +181,10 @@ public class GamePanel extends JPanel{
 		}
 		return false;
 					
+	}
+	
+	public void incrementCombo(int amount){
+		comboEffect.incremental(amount);
 	}
 	Thread generateWordThread ;
 	
