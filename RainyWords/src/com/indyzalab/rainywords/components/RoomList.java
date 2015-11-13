@@ -3,6 +3,8 @@ package com.indyzalab.rainywords.components;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
@@ -11,6 +13,7 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 
 import com.indyzalab.rainywords.utils.RoomListListener;
 
@@ -35,6 +38,16 @@ public class RoomList extends JPanel {
     list = new JList<String>(model);
     JScrollPane pane = new JScrollPane(list);
     JButton resetButton = new JButton("Reset");
+    final JTextField timeBox = new JTextField("Time...");
+    timeBox.addMouseListener(new MouseAdapter(){
+        @Override
+        public void mouseClicked(MouseEvent e){
+            timeBox.setText("");
+        }
+    });
+    
+
+    JButton setTime = new JButton("Set time");
 
     resetButton.addActionListener(new ActionListener() {
     	public void actionPerformed(ActionEvent e) {
@@ -45,6 +58,8 @@ public class RoomList extends JPanel {
 
     add(pane, BorderLayout.NORTH);
     add(resetButton, BorderLayout.WEST);
+    add(timeBox);
+    add(setTime, BorderLayout.EAST);
   }
 
   
