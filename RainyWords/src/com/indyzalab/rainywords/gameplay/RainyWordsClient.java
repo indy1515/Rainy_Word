@@ -171,6 +171,8 @@ public class RainyWordsClient {
                 			.getCommandDataJSON(CommandConstants.PLAYER_COMPLETE, textField.getText());
             		out.println(jObj.toString());
             		textField.setText("");
+            	}else{
+            		playWrongSound();
             	}
             
             }
@@ -445,7 +447,7 @@ public class RainyWordsClient {
             		
             	}
             	gamePanel.setPreWords(newWord);
-            	
+            	gamePanel.setIncrementCombo(0);
             	
         	} else if(command.equals(CommandConstants.PLAYER_LIST)){
         		// register opponent player
@@ -605,12 +607,14 @@ public class RainyWordsClient {
     public void playSong() {
     	JFileChooser choose_song = new JFileChooser();
 		try {
-			audioInputStream = AudioSystem.
-					getAudioInputStream(new File("src/LOVE ME RIGHT.wav").getAbsoluteFile());
+			audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/song.wav"));
+//			audioInputStream = AudioSystem.
+//					getAudioInputStream(new File("src/LOVE ME RIGHT.wav").getAbsoluteFile());
 			try {
 				clip = AudioSystem.getClip();
 				clip.open(audioInputStream);
 				clip.start();
+				
 			} catch (LineUnavailableException e1){
 				e1.printStackTrace();
 			}
@@ -774,6 +778,26 @@ public class RainyWordsClient {
 			e.printStackTrace();
 		}
     }
+    
+    public void playWrongSound(){
+		JFileChooser choose_song = new JFileChooser();
+		try {
+			AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/wrong.wav"));
+//			audioInputStream = AudioSystem.
+//					getAudioInputStream(new File("src/LOVE ME RIGHT.wav").getAbsoluteFile());
+			try {
+				Clip clip = AudioSystem.getClip();
+				clip.open(audioInputStream);
+				clip.start();
+			} catch (LineUnavailableException e1){
+				e1.printStackTrace();
+			}
+		} catch (UnsupportedAudioFileException e2){
+			e2.printStackTrace();
+		} catch (IOException e3){
+			e3.printStackTrace();
+		}
+	}
     
 
 }

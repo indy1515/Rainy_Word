@@ -41,6 +41,9 @@ public class ComboEffect extends JLabel{
 		incremental(1);
 	}
 
+	public void setIncremental(int amount){
+		counter = amount;
+	}
 	@Override
 	public void paintComponent(Graphics g){
 		super.paintComponent(g);
@@ -58,8 +61,8 @@ public class ComboEffect extends JLabel{
 		g2.setColor(Color.BLACK);
 		g2.setStroke(new BasicStroke(2));
 		g2.setColor(getColor());
-		int width = g2.getFontMetrics().stringWidth(counter+"");
-		int height = g2.getFontMetrics().stringWidth(counter+"");
+		int width = g2.getFontMetrics().stringWidth(counter+"x");
+		int height = g2.getFontMetrics().stringWidth(counter+"x");
 //		System.out.println("Draw x: "+pos_x+" y: "+(pos_y+width));
 		pos_x = d.width;
 		pos_y = d.height;

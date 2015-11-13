@@ -38,6 +38,7 @@ public class RoomList extends JPanel {
     list = new JList<String>(model);
     JScrollPane pane = new JScrollPane(list);
     JButton resetButton = new JButton("Reset");
+
     final JTextField timeBox = new JTextField("Time...");
     timeBox.addMouseListener(new MouseAdapter(){
         @Override
@@ -48,7 +49,6 @@ public class RoomList extends JPanel {
     
 
     JButton setTime = new JButton("Set time");
-
     resetButton.addActionListener(new ActionListener() {
     	public void actionPerformed(ActionEvent e) {
     	      int index = getSelectedIndex();

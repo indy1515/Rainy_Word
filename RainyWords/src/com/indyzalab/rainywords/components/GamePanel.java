@@ -5,12 +5,19 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
 
-import javax.swing.Timer;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.swing.JFileChooser;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 
 import com.indyzalab.rainywords.gameplay.Constants;
 import com.indyzalab.rainywords.utils.GamePanelListener;
@@ -144,10 +151,29 @@ public class GamePanel extends JPanel{
 			// Do create effect!
 			lineEffect.addLineList(new Line(d.width/2, d.height, word));
 			pointEffect.addPointList(new Point(word.point, word));
+			playSoundEffect();
 		}
 		words.removeAll(wordList);
 	}
-	
+	public void playSoundEffect(){
+		JFileChooser choose_song = new JFileChooser();
+		try {
+			AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/drum.wav"));
+//			audioInputStream = AudioSystem.
+//					getAudioInputStream(new File("src/LOVE ME RIGHT.wav").getAbsoluteFile());
+			try {
+				Clip clip = AudioSystem.getClip();
+				clip.open(audioInputStream);
+				clip.start();
+			} catch (LineUnavailableException e1){
+				e1.printStackTrace();
+			}
+		} catch (UnsupportedAudioFileException e2){
+			e2.printStackTrace();
+		} catch (IOException e3){
+			e3.printStackTrace();
+		}
+	}
 
 	public boolean containWords(String word){
 		for(Word w:words){
@@ -185,6 +211,10 @@ public class GamePanel extends JPanel{
 	
 	public void incrementCombo(int amount){
 		comboEffect.incremental(amount);
+	}
+	
+	public void setIncrementCombo(int amount){
+		comboEffect.setIncremental(amount);
 	}
 	Thread generateWordThread ;
 	
