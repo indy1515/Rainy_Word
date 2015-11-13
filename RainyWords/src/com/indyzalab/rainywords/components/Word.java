@@ -1,5 +1,6 @@
 package com.indyzalab.rainywords.components;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -83,6 +84,10 @@ public class Word extends JLabel{
 		Graphics2D g2 = (Graphics2D) g;
 		
 		if(getState() == STATE_EXIST){ 
+			int type = AlphaComposite.SRC_OVER; 
+			AlphaComposite composite = 
+			  AlphaComposite.getInstance(type,1.0f);
+			g2.setComposite(composite);
 			g2.setColor(Color.BLACK);
 //			g2.drawString(this.name,(int)( d.width*pos_x-(3.75*this.name.length())), (int)(d.height*pos_y));
 			int width = g.getFontMetrics().stringWidth(this.name);

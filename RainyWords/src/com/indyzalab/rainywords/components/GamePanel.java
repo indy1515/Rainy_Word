@@ -26,6 +26,7 @@ public class GamePanel extends JPanel{
 	
 	LineEffect lineEffect = new LineEffect();
 	PointEffect pointEffect = new PointEffect();
+	DiscoBackgroundEffect discoBackgroundEffect;
 	ArrayList<String> dictionaryWordList = new ArrayList<String>();
 	boolean isLoading = true;
 	
@@ -50,6 +51,7 @@ public class GamePanel extends JPanel{
 	};
 	public GamePanel(Dimension d){
 		this.d = d;
+		discoBackgroundEffect = new DiscoBackgroundEffect(d);
 		setPreferredSize(d);
 		setBackground(Color.WHITE);
 //		setOpaque(true);
@@ -88,6 +90,7 @@ public class GamePanel extends JPanel{
 	@Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        discoBackgroundEffect.paintComponent(g);
         Iterator<Word> iter = words.iterator();
         for(int i = 0;i<words.size();i++){
 //        	Word word = iter.next();
@@ -140,6 +143,15 @@ public class GamePanel extends JPanel{
 	}
 	
 
+	public boolean containWords(String word){
+		for(Word w:words){
+			if(w.name.equals(word)){
+				return true;
+			}
+		}
+		return false;
+					
+	}
 	
 	public boolean removeWords(String word){
 		for(Word w:words){

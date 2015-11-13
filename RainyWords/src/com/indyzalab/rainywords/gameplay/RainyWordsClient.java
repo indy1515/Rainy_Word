@@ -159,7 +159,9 @@ public class RainyWordsClient {
             		gamePanel.startPolling();
             	}
             	
-            	boolean foundWordToRemoved = gamePanel.removeWords(textField.getText());
+            	// If delay you may consider using this?
+//            	boolean foundWordToRemoved = gamePanel.removeWords)(textField.getText());
+            	boolean foundWordToRemoved = gamePanel.containWords(textField.getText());
             	// Check if it is feasible
             	if(foundWordToRemoved){
             		JSONObject jObj = CommandHelper
